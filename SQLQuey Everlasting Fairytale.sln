@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E.F. Dream.Editor.Plugins", "..\..\..\Desktop\EV Visualstudio\E.F. Dream\E.F. Dream.Editor.Plugins.csproj", "{3704552D-CA1B-338A-1EB8-13B1ADBDCAD4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{917C19C4-B3FE-426C-AA87-C1187D98A6FA}"
+	ProjectSection(SolutionItems) = preProject
+		Everlasting Fairytale\Everlasting Fairytale.vcxproj = Everlasting Fairytale\Everlasting Fairytale.vcxproj
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication2", "..\..\..\Desktop\EV Visualstudio\Everlasting Fairytale\BuildProcessTemplates\©®™ E.F. Magic\WebApplication2\WebApplication2\WebApplication2.csproj", "{1CB90105-E673-43F0-8C07-25F6ABDB840A}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "E.F. Magic", "..\..\..\Desktop\EV Visualstudio\Everlasting Fairytale\BuildProcessTemplates\©®™ E.F. Magic\WebApplication1\E.F. Magic\E.F. Magic.vbproj", "{01284BF7-28A3-4111-B4A0-9BCABFF027DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3704552D-CA1B-338A-1EB8-13B1ADBDCAD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3704552D-CA1B-338A-1EB8-13B1ADBDCAD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3704552D-CA1B-338A-1EB8-13B1ADBDCAD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3704552D-CA1B-338A-1EB8-13B1ADBDCAD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CB90105-E673-43F0-8C07-25F6ABDB840A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CB90105-E673-43F0-8C07-25F6ABDB840A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CB90105-E673-43F0-8C07-25F6ABDB840A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CB90105-E673-43F0-8C07-25F6ABDB840A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01284BF7-28A3-4111-B4A0-9BCABFF027DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01284BF7-28A3-4111-B4A0-9BCABFF027DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01284BF7-28A3-4111-B4A0-9BCABFF027DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01284BF7-28A3-4111-B4A0-9BCABFF027DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F2BB50E0-D4BA-4668-8545-372AD75FEE1E}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://everlastingfairytale.visualstudio.com/DefaultCollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = ..\\..\\..\\Desktop\\EV\u0020Visualstudio\\Everlasting\u0020Fairytale\\BuildProcessTemplates\\©®™\u0020E.F.\u0020Magic\\WebApplication1\\E.F.\u0020Magic\\E.F.\u0020Magic.vbproj
+		SccLocalPath1 = ..\\..\\..\\Desktop\\EV\u0020Visualstudio\\Everlasting\u0020Fairytale\\BuildProcessTemplates\\©®™\u0020E.F.\u0020Magic\\WebApplication1\\E.F.\u0020Magic
+		SccProjectUniqueName2 = ..\\..\\..\\Desktop\\EV\u0020Visualstudio\\Everlasting\u0020Fairytale\\BuildProcessTemplates\\©®™\u0020E.F.\u0020Magic\\WebApplication2\\WebApplication2\\WebApplication2.csproj
+		SccProjectName2 = Everlasting\u0020Fairytale/SQLQuey\u0020Everlasting\u0020Fairytale/WebApplication2
+		SccLocalPath2 = ..\\..\\..\\Desktop\\EV\u0020Visualstudio\\Everlasting\u0020Fairytale\\BuildProcessTemplates\\©®™\u0020E.F.\u0020Magic\\WebApplication2\\WebApplication2
+	EndGlobalSection
+EndGlobal

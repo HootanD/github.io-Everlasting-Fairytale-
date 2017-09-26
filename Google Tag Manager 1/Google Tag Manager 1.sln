@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Web
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Google Tag Manager 1", "Google Tag Manager 1\Google Tag Manager 1.vbproj", "{3A160EC3-CBF7-4E50-B859-4E7A6F91BE75}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Google Tag Manager 1.Tests", "Google Tag Manager 1.Tests\Google Tag Manager 1.Tests.vbproj", "{8A2028C2-9FF4-452C-A5A1-2DDDDC4EBA55}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishScripts", "PublishScripts", "{2CD236DB-7201-4C87-91A4-B175A2468783}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\AzureWebsitePublishModule.psm1 = PublishScripts\AzureWebsitePublishModule.psm1
+		PublishScripts\Publish-WebApplicationWebsite.ps1 = PublishScripts\Publish-WebApplicationWebsite.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configurations", "Configurations", "{69888C53-AE2D-4BBC-A112-447F0B8E9231}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\Configurations\GoogleTagManager1-WAWS-dev.json = PublishScripts\Configurations\GoogleTagManager1-WAWS-dev.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{FBDB70C6-64D1-4317-BDF3-0BE0F491124B}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://hootandehbonei.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Google\u0020Tag\u0020Manager\u00201.Tests\\Google\u0020Tag\u0020Manager\u00201.Tests.vbproj
+		SccProjectName1 = Google\u0020Tag\u0020Manager\u00201.Tests
+		SccLocalPath1 = Google\u0020Tag\u0020Manager\u00201.Tests
+		SccProjectUniqueName2 = Google\u0020Tag\u0020Manager\u00201\\Google\u0020Tag\u0020Manager\u00201.vbproj
+		SccProjectName2 = Google\u0020Tag\u0020Manager\u00201
+		SccLocalPath2 = Google\u0020Tag\u0020Manager\u00201
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3A160EC3-CBF7-4E50-B859-4E7A6F91BE75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A160EC3-CBF7-4E50-B859-4E7A6F91BE75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A160EC3-CBF7-4E50-B859-4E7A6F91BE75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A160EC3-CBF7-4E50-B859-4E7A6F91BE75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A2028C2-9FF4-452C-A5A1-2DDDDC4EBA55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A2028C2-9FF4-452C-A5A1-2DDDDC4EBA55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A2028C2-9FF4-452C-A5A1-2DDDDC4EBA55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A2028C2-9FF4-452C-A5A1-2DDDDC4EBA55}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{69888C53-AE2D-4BBC-A112-447F0B8E9231} = {2CD236DB-7201-4C87-91A4-B175A2468783}
+	EndGlobalSection
+EndGlobal
