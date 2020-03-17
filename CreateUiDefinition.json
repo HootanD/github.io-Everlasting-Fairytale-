@@ -1,142 +1,461 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
-    "handler": "Microsoft.Compute.MultiVm",
+    "handler": "Microsoft.Azure.CreateUIDef",
     "version": "0.1.2-preview",
     "parameters": {
         "basics": [
-            {}
+            {
+                "name": "clusterName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Sample Input",
+                "defaultValue": "",
+                "constraints": {
+                    "required": false
+                }
+            }
         ],
         "steps": [
             {
-                "name": "vmCredentials",
-                "label": "Azure Managed Application",
-                "bladeTitle": "Application credentials",
-                "subLabel": {
-                    "preValidation": "Provide VM credentials",
-                    "postValidation": "Great - let's move on!"
-                },
+                "name": "simpleControls",
+                "label": "Simple Controls",
                 "elements": [
                     {
-                        "name": "adminUserName",
-                        "type": "Microsoft.Compute.UserNameTextBox",
-                        "label": "Admin username",
-                        "osPlatform": "Windows",
-                        "constraints": {
-                            "required": true
-                        },
-                        "toolTip": "Provide admin username for the virtual machine"
+                        "name": "infoMessage",
+                        "type": "Microsoft.Common.InfoBox",
+                        "visible": true,
+                        "options": {
+                            "icon": "Info",
+                            "text": "Welcome to the Azure Ice Cream Shop"
+                        }
                     },
                     {
-                        "name": "vmPwd",
-                        "type": "Microsoft.Compute.CredentialsCombo",
-                        "label": {
-                            "password": "Password",
-                            "confirmPassword": "Confirm password"
-                        },
-                        "osPlatform": "Windows",
+                        "name": "iceCreamFlavors",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Ice Cream Flavors",
+                        "defaultValue": "Chocolate",
+                        "toolTip": "",
                         "constraints": {
-                            "customPasswordRegex": "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$",
-                            "customValidationMessage": "The password must contain at least 8 characters",
+                            "allowedValues": [
+                                {
+                                    "label": "Chocolate",
+                                    "value": "brown"
+                                },
+                                {
+                                    "label": "Strawberry",
+                                    "value": "pink"
+                                },
+                                {
+                                    "label": "Vanilla",
+                                    "value": "white"
+                                },
+                                {
+                                    "label": "Azureberry",
+                                    "value": "blue"
+                                }
+                            ],
                             "required": true
                         },
-                        "options": {
-                            "hideConfirmation": false
+                        "visible": true
+                    },
+                    {
+                        "name": "coneType",
+                        "type": "Microsoft.Common.OptionsGroup",
+                        "label": "Cone Option",
+                        "defaultValue": "Waffle Cone",
+                        "toolTip": "",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Waffle Cone",
+                                    "value": "waffle"
+                                },
+                                {
+                                    "label": "Sugar Cone",
+                                    "value": "sugar"
+                                },
+                                {
+                                    "label": "Pretzel Cone",
+                                    "value": "pretzel"
+                                },
+                                {
+                                    "label": "None (cup)",
+                                    "value": "cup"
+                                }
+                            ],
+                            "required": true
                         },
-                        "toolTip": {
-                            "password": "Provide admin password for the virtual machine"
-                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "newsletter",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Monthly Newsletter",
+                        "elements": [
+                            {
+                                "name": "announcement",
+                                "type": "Microsoft.Common.TextBlock",
+                                "visible": true,
+                                "options": {
+                                    "text": "Join our Flavor of the Month club and never miss a single delicious announcement! No spam (no kidding). Must be at least 18 years old to register.",
+                                    "link": {
+                                        "label": "Learn more",
+                                        "uri": "https://www.microsoft.com"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "emailAddress",
+                                "type": "Microsoft.Common.TextBox",
+                                "label": "Email",
+                                "defaultValue": "",
+                                "toolTip": "Please enter a valid email account",
+                                "constraints": {
+                                    "required": false,
+                                    "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
+                                    "validationMessage": "Email is not valid. Please re-enter."
+                                },
+                                "visible": true
+                            }
+                        ],
                         "visible": true
                     }
                 ]
             },
             {
-                "name": "appSettings",
-                "label": "Application settings",
-                "subLabel": {
-                    "preValidation": "Configure the managed application",
-                    "postValidation": "Done!"
-                },
-                "bladeTitle": "Settings",
+                "name": "vmParameters",
+                "label": "VM Parameters",
                 "elements": [
                     {
-                        "name": "vmName",
-                        "type": "Microsoft.Common.TextBox",
-                        "label": "Application name",
-                        "toolTip": "Assign a name to your Azure application",
-                        "defaultValue": "",
-                        "constraints": {
-                            "required": true,
-                            "regex": "[a-z][a-z0-9-]{2,5}[a-z0-9]$",
-                            "validationMessage": "Must be 3-5 characters."
-                        }
-                    },
-                    {
-                        "name": "trialOrProd",
-                        "type": "Microsoft.Common.OptionsGroup",
-                        "label": "Trial or Production?",
-                        "defaultValue": "Trial",
-                        "toolTip": "For trial, cost will be minimal. For prod, resources are optimized.",
-                        "constraints": {
-                            "allowedValues": [
-                                {
-                                    "label": "Trial",
-                                    "value": "Trial"
+                        "name": "vmSection",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Customize your VM",
+                        "elements": [
+                            {
+                                "name": "vmSize",
+                                "type": "Microsoft.Compute.SizeSelector",
+                                "label": "Size",
+                                "toolTip": "",
+                                "recommendedSizes": [
+                                    "Standard_D1",
+                                    "Standard_D2",
+                                    "Standard_D3",
+                                    "Standard_B1s"
+                                ],
+                                "constraints": {
+                                    "allowedSizes": [],
+                                    "numAvailabilityZonesRequired": 3,
+                                    "zone": "3"
                                 },
-                                {
-                                    "label": "Production",
-                                    "value": "Production"
-                                }
-                            ]
-                        },
+                                "options": {
+                                    "hideDiskTypeFilter": false
+                                },
+                                "osPlatform": "Windows",
+                                "imageReference": {
+                                    "publisher": "MicrosoftWindowsServer",
+                                    "offer": "WindowsServer",
+                                    "sku": "2012-R2-Datacenter"
+                                },
+                                "count": 2,
+                                "visible": true
+                            }
+                        ],
                         "visible": true
                     },
                     {
-                        "name": "virtualNetwork",
+                        "name": "adminUsername",
+                        "type": "Microsoft.Compute.UserNameTextBox",
+                        "label": "Admin Username",
+                        "defaultValue": "",
+                        "toolTip": "",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[a-z0-9A-Z]{1,30}$",
+                            "validationMessage": "Only alphanumeric characters are allowed, and the value must be 1-30 characters long."
+                        },
+                        "osPlatform": "Windows",
+                        "visible": true
+                    },
+                    {
+                        "name": "vmCredentials",
+                        "type": "Microsoft.Compute.CredentialsCombo",
+                        "label": {
+                            "password": "Password",
+                            "confirmPassword": "Confirm password"
+                        },
+                        "toolTip": {
+                            "password": ""
+                        },
+                        "constraints": {
+                            "required": true,
+                            "customPasswordRegex": "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])[\\w~@#$%^&*+=|{}:;!.?\\()\\[\\]-]{8,}$",
+                            "customValidationMessage": "The password must contain at least 8 characters, with at least 1 uppercase, 1 lowercase and 1 number."
+                        },
+                        "options": {
+                            "hideConfirmation": false
+                        },
+                        "osPlatform": "Windows",
+                        "visible": true
+                    }
+                ]
+            },
+            {
+                "name": "storageSettings",
+                "label": "Storage Settings",
+                "elements": [
+                    {
+                        "name": "storageInfo",
+                        "type": "Microsoft.Common.TextBlock",
+                        "visible": true,
+                        "options": {
+                            "text": "There are two controls which you can use for gathering storage requirements. They are the single and multi Storage Account selectors featured below.",
+                            "link": {
+                                "label": "",
+                                "uri": ""
+                            }
+                        }
+                    },
+                    {
+                        "name": "sectionStorage1",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Single Selector",
+                        "elements": [
+                            {
+                                "name": "singleStorage",
+                                "type": "Microsoft.Storage.StorageAccountSelector",
+                                "label": "Storage account",
+                                "toolTip": "",
+                                "defaultValue": {
+                                    "name": "uniquestorageaccount01",
+                                    "type": "Premium_LRS"
+                                },
+                                "constraints": {
+                                    "allowedTypes": []
+                                },
+                                "options": {
+                                    "hideExisting": false
+                                },
+                                "visible": true
+                            }
+                        ],
+                        "visible": true
+                    },
+                    {
+                        "name": "sectionStorage2",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Multi Selector",
+                        "elements": [
+                            {
+                                "name": "multiStorage",
+                                "type": "Microsoft.Storage.MultiStorageAccountCombo",
+                                "label": {
+                                    "prefix": "Storage account prefix",
+                                    "type": "Storage account type"
+                                },
+                                "toolTip": {
+                                    "prefix": "",
+                                    "type": ""
+                                },
+                                "defaultValue": {
+                                    "prefix": "aprefix",
+                                    "type": "Premium_LRS"
+                                },
+                                "constraints": {
+                                    "excludedTypes": []
+                                },
+                                "count": 2,
+                                "visible": true
+                            }
+                        ],
+                        "visible": true
+                    }
+                ]
+            },
+            {
+                "name": "networking",
+                "label": "Networking",
+                "elements": [
+                    {
+                        "name": "networkingInfo",
+                        "type": "Microsoft.Common.TextBlock",
+                        "visible": true,
+                        "options": {
+                            "text": "There are two controls tailored towards gathering network requirements. They are the Public IP Address and Virtual Network combos seen below.",
+                            "link": {
+                                "label": "",
+                                "uri": ""
+                            }
+                        }
+                    },
+                    {
+                        "name": "sectionNetworking1",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Public IP Address",
+                        "elements": [
+                            {
+                                "name": "publicIp",
+                                "type": "Microsoft.Network.PublicIpAddressCombo",
+                                "label": {
+                                    "publicIpAddress": "Public IP address",
+                                    "domainNameLabel": "Domain name label"
+                                },
+                                "toolTip": {
+                                    "publicIpAddress": "",
+                                    "domainNameLabel": ""
+                                },
+                                "defaultValue": {
+                                    "publicIpAddressName": "ip01",
+                                    "domainNameLabel": "mydomain"
+                                },
+                                "constraints": {
+                                    "required": {
+                                        "domainNameLabel": true
+                                    }
+                                },
+                                "options": {
+                                    "hideNone": false,
+                                    "hideDomainNameLabel": false,
+                                    "hideExisting": false,
+                                    "zone": 3
+                                },
+                                "visible": true
+                            }
+                        ],
+                        "visible": true
+                    },
+                    {
+                        "name": "vnet",
                         "type": "Microsoft.Network.VirtualNetworkCombo",
                         "label": {
                             "virtualNetwork": "Virtual network",
                             "subnets": "Subnets"
                         },
                         "toolTip": {
-                            "virtualNetwork": "Virtual Network Name",
-                            "subnets": "Subnet requried for Azure Application"
+                            "virtualNetwork": "",
+                            "subnets": ""
                         },
                         "defaultValue": {
-                            "name": "app-vnet",
-                            "addressPrefixSize": "/22"
+                            "name": "vnet01",
+                            "addressPrefixSize": "/16"
                         },
                         "constraints": {
-                            "minAddressPrefixSize": "/22"
+                            "minAddressPrefixSize": "/16"
+                        },
+                        "options": {
+                            "hideExisting": false
                         },
                         "subnets": {
                             "subnet1": {
-                                "label": "Subnet name",
+                                "label": "First subnet",
                                 "defaultValue": {
-                                    "name": "app-subnet",
+                                    "name": "subnet-1",
                                     "addressPrefixSize": "/24"
                                 },
                                 "constraints": {
                                     "minAddressPrefixSize": "/24",
                                     "minAddressCount": 12,
-                                    "requireContiguousAddresses": false
+                                    "requireContiguousAddresses": true
+                                }
+                            },
+                            "subnet2": {
+                                "label": "Second subnet",
+                                "defaultValue": {
+                                    "name": "subnet-2",
+                                    "addressPrefixSize": "/26"
+                                },
+                                "constraints": {
+                                    "minAddressPrefixSize": "/26",
+                                    "minAddressCount": 8,
+                                    "requireContiguousAddresses": true
                                 }
                             }
+                        },
+                        "visible": true
+                    }
+                ]
+            },
+            {
+                "name": "otherSettings",
+                "label": "Other Settings",
+                "elements": [
+                    {
+                        "name": "miscInfo",
+                        "type": "Microsoft.Common.TextBlock",
+                        "visible": true,
+                        "options": {
+                            "text": "Users can upload local data using the FileUpload control and enter a password using the PasswordBox. The PasswordBox differs slightly from the CredentialsCombo because it doesn't provide an option for SSH key authentication.",
+                            "link": {
+                                "label": "",
+                                "uri": ""
+                            }
                         }
+                    },
+                    {
+                        "name": "fileSelect",
+                        "type": "Microsoft.Common.FileUpload",
+                        "label": "Select a file",
+                        "toolTip": "Only Word and XML files accepted",
+                        "constraints": {
+                            "required": false,
+                            "accept": ".doc,.docx,.xml,application/msword"
+                        },
+                        "options": {
+                            "multiple": false,
+                            "uploadMode": "file",
+                            "openMode": "text",
+                            "encoding": "UTF-8"
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "password",
+                        "type": "Microsoft.Common.PasswordBox",
+                        "label": {
+                            "password": "Password"
+                        },
+                        "toolTip": "",
+                        "constraints": {
+                            "required": true,
+                            "regex": "",
+                            "validationMessage": ""
+                        },
+                        "options": {
+                            "hideConfirmation": true
+                        },
+                        "visible": true
+                    }
+                ]
+            },
+            {
+                "name": "tags",
+                "label": "Tags",
+                "elements": [
+                    {
+                        "name": "tagsByResource",
+                        "type": "Microsoft.Common.TagsByResource",
+                        "resources": [
+                            "Microsoft.Storage/storageAccounts",
+                            "Microsoft.Compute/virtualMachines"
+                        ]
                     }
                 ]
             }
         ],
         "outputs": {
-            "vmName": "[steps('appSettings').vmName]",
-            "trialOrProduction": "[steps('appSettings').trialOrProd]",
-            "userName": "[steps('vmCredentials').adminUsername]",
-            "pwd": "[steps('vmCredentials').vmPwd.password]",
-            "applicationResourceName": "[steps('appSettings').vmName]",
-            "subnetName": "[steps('appSettings').virtualNetwork.subnets.subnet1.name]",
-            "subnetAddressPrefix": "[steps('appSettings').virtualNetwork.subnets.subnet1.addressPrefix]",
-            "vNetAddressPrefix": "[steps('appSettings').virtualNetwork.addressPrefix]",
-            "virtualNetworkName": "[steps('appSettings').virtualNetwork.name]",
-            "vNetRgName": "[steps('appSettings').virtualNetwork.resourceGroup]"
+            "outTextBox": "[basics('clusterName')]",
+            "outInfoBox": "[steps('simpleControls').infoMessage]",
+            "outDropDown": "[steps('simpleControls').iceCreamFlavors]",
+            "ouOptionsGroup": "[steps('simpleControls').coneType]",
+            "outTextBlock": "[steps('simpleControls').newsletter.announcement]",
+            "outSizeSelector": "[steps('vmParameters').vmSection.vmSize]",
+            "outUserNameTextBox": "[steps('vmParameters').adminUsername]",
+            "outCredentialsCombo": "[steps('vmParameters').vmCredentials]",
+            "outStorageAccountSelector": "[steps('storageSettings').sectionStorage1.singleStorage]",
+            "outMultiStorageAccountCombo": "[steps('storageSettings').sectionStorage2.multiStorage]",
+            "outPublicIpAddressCombo": "[steps('networking').sectionNetworking1.publicIp]",
+            "outVirtualNetworkCombo": "[steps('networking').vnet]",
+            "outFileUpload": "[steps('otherSettings').fileSelect]",
+            "outPasswordBox": "[steps('otherSettings').password]",
+            "tagsByResource": "[steps('tags').tagsByResource]"
         }
     }
 }
