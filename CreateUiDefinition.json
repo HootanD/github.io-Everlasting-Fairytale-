@@ -22,4 +22,4 @@
            "parameters": {
             "resourceTypes": ["Microsoft.Compute/disks"],
             "basics": [
-        ...}
+}
