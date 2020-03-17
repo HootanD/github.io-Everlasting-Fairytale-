@@ -14,7 +14,7 @@
     "userName": "[steps('vmCredentials').adminUsername]",
     "pwd": "[steps('vmCredentials').vmPwd.password]",
     "applicationResourceName": "[steps('appSettings').vmName]"
-   }
+      }
       {
          "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
            "handler": "Microsoft.Azure.CreateUIDef",
