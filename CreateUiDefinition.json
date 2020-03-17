@@ -5,21 +5,13 @@
    "parameters": {
       "basics": [ ],
       "steps": [ ],
-      "outputs": { },
-      "resourceTypes": [ ]
-   }
-   "outputs": {
+      "outputs": {"outputs": {
     "vmName": "[steps('appSettings').vmName]",
     "trialOrProduction": "[steps('appSettings').trialOrProd]",
     "userName": "[steps('vmCredentials').adminUsername]",
     "pwd": "[steps('vmCredentials').vmPwd.password]",
     "applicationResourceName": "[steps('appSettings').vmName]"
-      }
-      {
-         "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
-           "handler": "Microsoft.Azure.CreateUIDef",
-           "version": "0.1.2-preview",
-           "parameters": {
-            "resourceTypes": ["Microsoft.Compute/disks"],
-            "basics": [
+} },
+      "resourceTypes": [ ]
+   }
 }
