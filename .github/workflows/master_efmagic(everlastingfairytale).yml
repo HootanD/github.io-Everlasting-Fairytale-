@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'efmagic'
           slot-name: 'EverlastingFairytale'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B607DF920F1941729327FEA1A1C08888 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_965C858AFA78475C9223D16019A7CDC9 }}
           package: .
