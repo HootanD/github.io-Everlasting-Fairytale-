@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "everlastingfairytale.everlastingfairytale.com.everlastingfairytale",
+    "sha256_cert_fingerprints":
+    ["69:68:DD:5C:8C:C6:DA:E0:B5:5D:5E:5E:8F:9D:CD:E3:06:60:A4:DA:A8:D5:C0:91:EE:78:20:CB:A3:52:A1:3F"]
+  }
+}]
