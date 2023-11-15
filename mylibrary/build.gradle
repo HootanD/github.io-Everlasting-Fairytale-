@@ -24,8 +24,6 @@ android {
         signingConfig signingConfigs.debug
         resourceConfigurations += ['']
         multiDexEnabled true
-        versionCode 151123
-        versionName 'everlasting fairytale'
     }
 
     buildTypes {
@@ -35,7 +33,6 @@ android {
             jniDebuggable true
             renderscriptDebuggable true
             signingConfig signingConfigs.debug
-            versionNameSuffix 'everlasting fairytale'
         }
     }
     compileOptions {
