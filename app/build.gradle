@@ -23,12 +23,13 @@ android {
 
     defaultConfig {
         applicationId "everlastingfairytale.everlastingfairytale.com.everlastingfairytale"
-        minSdk 24
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        minSdk 33
+        targetSdk 34
+        versionCode 151123
+        versionName 'everlasting fairytale'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.release
     }
 
     buildTypes {
@@ -40,6 +41,7 @@ android {
             jniDebuggable true
             renderscriptDebuggable true
             signingConfig signingConfigs.release
+            applicationIdSuffix 'everlastingfairytale.everlastingfairytale.com.everlastingfairytale'
         }
     }
     compileOptions {
@@ -58,6 +60,8 @@ android {
     buildFeatures {
         viewBinding true
     }
+    buildToolsVersion '33.0.1'
+    ndkVersion '23.1.7779620'
 }
 
 dependencies {
