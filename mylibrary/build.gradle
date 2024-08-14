@@ -1,0 +1,64 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    signingConfigs {
+        debug {
+            storeFile file('C:\\Users\\hoota\\OneDrive - Everlasting FairytaleTranslators and Interpreters\\Old Computer\\Certificate\\Key Store\\keystore.jks')
+            storePassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+            keyAlias 'Upload'
+            keyPassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+        }
+        release {
+            storeFile file('C:\\Users\\hoota\\OneDrive - Everlasting FairytaleTranslators and Interpreters\\Old Computer\\Certificate\\Key Store\\keystore.jks')
+            storePassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+            keyPassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+            keyAlias 'upload'
+        }
+    }
+    namespace 'everlastingfairytale.everlastingfairytale.com.mylibrary'
+    compileSdk 33
+
+    defaultConfig {
+        minSdk 33
+        targetSdk 33
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+        signingConfig signingConfigs.debug
+        resourceConfigurations += ['']
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            jniDebuggable true
+            renderscriptDebuggable true
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    ndkVersion '23.1.7779620'
+    buildToolsVersion '33.0.1'
+    flavorDimensions 'Release'
+}
+
+dependencies {
+
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
