@@ -1,0 +1,3 @@
+C:/Users/hoota/AndroidStudioProjects/EverlastingFairytale/app/.cxx/RelWithDebInfo/5r736p36/x86_64/CMakeFiles/everlastingfairytale.dir
+C:/Users/hoota/AndroidStudioProjects/EverlastingFairytale/app/.cxx/RelWithDebInfo/5r736p36/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/hoota/AndroidStudioProjects/EverlastingFairytale/app/.cxx/RelWithDebInfo/5r736p36/x86_64/CMakeFiles/rebuild_cache.dir
