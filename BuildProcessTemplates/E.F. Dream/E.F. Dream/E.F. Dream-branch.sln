@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Web
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "WebApplication1", "WebApplication1\WebApplication1.vbproj", "{0E02BAC3-B4F2-4472-8969-1E7CF428846E}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "E.F. Dream.Tests", "E.F. Dream.Tests\E.F. Dream.Tests.vbproj", "{BA5C9E30-039B-434D-B675-4DC08D7EF670}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PublishScripts", "PublishScripts", "{5DAE254B-294B-4C55-BACB-81437BBC99FA}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\AzureWebsitePublishModule.psm1 = PublishScripts\AzureWebsitePublishModule.psm1
+		PublishScripts\Publish-WebApplicationWebsite.ps1 = PublishScripts\Publish-WebApplicationWebsite.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configurations", "Configurations", "{84C05B39-2E5B-41A0-A8C4-3FD5F3FC0563}"
+	ProjectSection(SolutionItems) = preProject
+		PublishScripts\Configurations\WebApplication1-WAWS-dev.json = PublishScripts\Configurations\WebApplication1-WAWS-dev.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{10D4C672-BD6F-40AC-B3BD-EEFB126E38BE}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://hootandehbonei.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = E.F.\u0020Dream.Tests\\E.F.\u0020Dream.Tests.vbproj
+		SccProjectName1 = E.F.\u0020Dream.Tests
+		SccLocalPath1 = E.F.\u0020Dream.Tests
+		SccProjectUniqueName2 = WebApplication1\\WebApplication1.vbproj
+		SccProjectName2 = WebApplication1
+		SccLocalPath2 = WebApplication1
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E02BAC3-B4F2-4472-8969-1E7CF428846E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E02BAC3-B4F2-4472-8969-1E7CF428846E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E02BAC3-B4F2-4472-8969-1E7CF428846E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E02BAC3-B4F2-4472-8969-1E7CF428846E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA5C9E30-039B-434D-B675-4DC08D7EF670}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA5C9E30-039B-434D-B675-4DC08D7EF670}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA5C9E30-039B-434D-B675-4DC08D7EF670}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA5C9E30-039B-434D-B675-4DC08D7EF670}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{84C05B39-2E5B-41A0-A8C4-3FD5F3FC0563} = {5DAE254B-294B-4C55-BACB-81437BBC99FA}
+	EndGlobalSection
+EndGlobal

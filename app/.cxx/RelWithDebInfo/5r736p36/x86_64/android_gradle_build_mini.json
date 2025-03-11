@@ -1,0 +1,29 @@
+{
+  "buildFiles": [
+    "C:\\Users\\hoota\\AndroidStudioProjects\\EverlastingFairytale\\app\\src\\main\\cpp\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\hoota\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\hoota\\AndroidStudioProjects\\EverlastingFairytale\\app\\.cxx\\RelWithDebInfo\\5r736p36\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\hoota\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\hoota\\AndroidStudioProjects\\EverlastingFairytale\\app\\.cxx\\RelWithDebInfo\\5r736p36\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "everlastingfairytale::@6890427a1f51a3e7e1df": {
+      "artifactName": "everlastingfairytale",
+      "abi": "x86_64",
+      "output": "C:\\Users\\hoota\\AndroidStudioProjects\\EverlastingFairytale\\app\\build\\intermediates\\cxx\\RelWithDebInfo\\5r736p36\\obj\\x86_64\\libeverlastingfairytale.so",
+      "runtimeFiles": [
+        "C:\\Users\\hoota\\AppData\\Local\\Android\\Sdk\\ndk\\23.1.7779620\\toolchains\\llvm\\prebuilt\\windows-x86_64\\sysroot\\usr\\lib\\x86_64-linux-android\\24\\liblog.so"
+      ]
+    }
+  }
+}

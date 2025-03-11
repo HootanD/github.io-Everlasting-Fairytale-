@@ -1,0 +1,960 @@
+{
+    "exportFormatVersion": 1.3,
+    "exportTime": "2015-10-08 23:11:23",
+    "containerVersion": {
+        "accountId": "19646019",
+        "containerId": "754649",
+        "containerVersionId": "0",
+        "deleted": false,
+        "container": {
+            "accountId": "19646019",
+            "containerId": "754649",
+            "name": "Everlasting Fairytale Cultural Forum",
+            "domainName": [
+                "//www.everlastingfairytaleculturalforum.co",
+                "//www.everlastingfairytaleculturalforum.com",
+                "//www.everlastingfairytaleculturalforum.org",
+                "//www.everlastingfairytaleculturalforum.net",
+                "//www.everlastingfairytale.com",
+                "//www.everlastingfairytale.info",
+                "//www.everlastingfairytale.net",
+                "//www.everlastingfairytale.org"
+            ],
+            "publicId": "GTM-KZRLX6",
+            "timeZoneCountryId": "AU",
+            "timeZoneId": "Australia/Perth",
+            "notes": "",
+            "usageContext": [
+                "WEB"
+            ],
+            "fingerprint": "1444345772578",
+            "enabledBuiltInVariable": [
+                "PAGE_URL",
+                "PAGE_HOSTNAME",
+                "PAGE_PATH",
+                "REFERRER",
+                "EVENT",
+                "CLICK_ELEMENT",
+                "CLICK_CLASSES",
+                "CLICK_ID",
+                "CLICK_TARGET",
+                "CLICK_URL",
+                "CLICK_TEXT",
+                "FORM_ELEMENT",
+                "FORM_CLASSES",
+                "FORM_ID",
+                "FORM_TARGET",
+                "FORM_URL",
+                "FORM_TEXT",
+                "ERROR_MESSAGE",
+                "ERROR_URL",
+                "ERROR_LINE",
+                "NEW_HISTORY_FRAGMENT",
+                "OLD_HISTORY_FRAGMENT",
+                "NEW_HISTORY_STATE",
+                "OLD_HISTORY_STATE",
+                "HISTORY_SOURCE",
+                "CONTAINER_VERSION",
+                "DEBUG_MODE",
+                "RANDOM_NUMBER",
+                "CONTAINER_ID",
+                "HTML_ID"
+            ]
+        },
+        "tag": [
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "tagId": "1",
+                "name": "Everlasting Fairytale",
+                "type": "ua",
+                "liveOnly": true,
+                "priority": {
+                    "type": "INTEGER",
+                    "value": "1"
+                },
+                "scheduleStartMs": 1415026800000,
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setTrackerName",
+                        "value": "true"
+                    },
+                    {
+                        "type": "LIST",
+                        "key": "fieldsToSet",
+                        "list": [
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "anonymizeIp"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "true"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "sessionControl"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "referrer"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "page"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "title"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "sampleRate"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "forceSSL"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "true"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "cookieName"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "cookieDomain"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MAP",
+                                "map": [
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "fieldName",
+                                        "value": "cookiePath"
+                                    },
+                                    {
+                                        "type": "TEMPLATE",
+                                        "key": "value",
+                                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackerName",
+                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "doubleClick",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useDebugVersion",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackingId",
+                        "value": "{{Everlasting Fairytale Inc.}}{{Everlasting Fairytale yahoo group}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Quickstart}}"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackType",
+                        "value": "TRACK_TRANSACTION"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "functionName",
+                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enableLinkId",
+                        "value": "true"
+                    }
+                ],
+                "fingerprint": "0",
+                "firingTriggerId": [
+                    "2",
+                    "1"
+                ],
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "tagId": "3",
+                "name": "Everlasting Fairytale_import_1",
+                "type": "ua",
+                "liveOnly": true,
+                "priority": {
+                    "type": "INTEGER",
+                    "value": "1"
+                },
+                "scheduleStartMs": 1415026800000,
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setTrackerName",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackerName",
+                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useDebugVersion",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "doubleClick",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackingId",
+                        "value": "{{Everlasting Fairytale Inc.}}{{Everlasting Fairytale yahoo group}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Quickstart}}"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackType",
+                        "value": "TRACK_TRANSACTION"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "functionName",
+                        "value": "{{Everlasting Fairytale Quickstart}}{{Everlasting Fairytale Xanga}}{{Everlasting Fairytale Human Right Cultural Forum}}{{Everlasting Fairytale yahoo group}}{{Everlasting Fairytale Inc.}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enableLinkId",
+                        "value": "true"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "tagId": "7",
+                "name": "Everlasting Fairytale_import_2",
+                "type": "ua",
+                "liveOnly": true,
+                "priority": {
+                    "type": "INTEGER",
+                    "value": "1"
+                },
+                "scheduleStartMs": 1415026800000,
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enableEcommerce",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setTrackerName",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useEcommerceDataLayer",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "doubleClick",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "decorateFormsAutoLink",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackingId",
+                        "value": "{{hootandehbonei.blogspot.com}}{{My Forum}}{{Ultimate Challange}}{{everlastingfairytale.wordpress.com}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{everlastingfairytale.ning.com}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enableLinkId",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useHashAutoLink",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackerName",
+                        "value": "{{hootandehbonei.blogspot.com}}{{My Forum}}{{Ultimate Challange}}{{everlastingfairytale.wordpress.com}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{everlastingfairytale.ning.com}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useDebugVersion",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackType",
+                        "value": "TRACK_PAGEVIEW"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "functionName",
+                        "value": "{{hootandehbonei.blogspot.com}}{{Ultimate Challange}}{{My Forum}}{{everlastingfairytale.wordpress.com}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{everlastingfairytale.ning.com}}"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "autoLinkDomains",
+                        "value": "{{hootandehbonei.blogspot.com}}{{My Forum}}{{Ultimate Challange}}{{everlastingfairytale.wordpress.com}}{{everlastingfa​irytale.ning.com HootanDehbonei}}{{everlastingfairytale.ning.com}}"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "tagId": "6",
+                "name": "©®™ Everlasting Fairytale",
+                "type": "ua",
+                "liveOnly": true,
+                "priority": {
+                    "type": "INTEGER",
+                    "value": "1"
+                },
+                "scheduleStartMs": 1409148000000,
+                "parameter": [
+                    {
+                        "type": "BOOLEAN",
+                        "key": "setTrackerName",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackerName",
+                        "value": "UA-15911328-15{{Everlasting Fairytale Green Cultural Forum}}{{Everlasting Fairytale Education Cultural Forum}}{{Everlasting Fairytale Cultural Forum}}{{Everlasting Fairytale Club}}{{Everlasting Fairytale Community Arts Centre}}"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "useDebugVersion",
+                        "value": "true"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "doubleClick",
+                        "value": "true"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackingId",
+                        "value": "{{Everlasting Fairytale Green Cultural Forum}}{{Everlasting Fairytale Education Cultural Forum}}{{Everlasting Fairytale Cultural Forum}}{{Everlasting Fairytale Club}}{{Everlasting Fairytale Community Arts Centre}}UA-15911328-15"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "trackType",
+                        "value": "TRACK_TRANSACTION"
+                    },
+                    {
+                        "type": "TEMPLATE",
+                        "key": "functionName",
+                        "value": "©®™ Everlasting Fairytale"
+                    },
+                    {
+                        "type": "BOOLEAN",
+                        "key": "enableLinkId",
+                        "value": "true"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            }
+        ],
+        "fingerprint": "0",
+        "trigger": [
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "triggerId": "1",
+                "name": "All pages",
+                "type": "PAGEVIEW",
+                "filter": [
+                    {
+                        "type": "MATCH_REGEX",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{url}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": ".*"
+                            }
+                        ]
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "triggerId": "2",
+                "name": "Thank you",
+                "type": "PAGEVIEW",
+                "filter": [
+                    {
+                        "type": "CONTAINS",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{Everlasting Fairytale Quickstart}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": "thankyou.html"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "CONTAINS",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{Everlasting Fairytale Xanga}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": "thankyou.html"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "CONTAINS",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{Everlasting Fairytale Human Right Cultural Forum}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": "thankyou.html"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "CONTAINS",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{Everlasting Fairytale yahoo group}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": "thankyou.html"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "CONTAINS",
+                        "parameter": [
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg0",
+                                "value": "{{Everlasting Fairytale Inc.}}"
+                            },
+                            {
+                                "type": "TEMPLATE",
+                                "key": "arg1",
+                                "value": "thankyou.html"
+                            }
+                        ]
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            }
+        ],
+        "variable": [
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "17",
+                "name": "Everlasting Fairytale Human Right Cultural Forum",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-22"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "22",
+                "name": "Everlasting Fairytale Inc.",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-10"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "19",
+                "name": "Everlasting Fairytale Quickstart",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-16"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "18",
+                "name": "Everlasting Fairytale Xanga",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-12"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "20",
+                "name": "Everlasting Fairytale yahoo group",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-7"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "6",
+                "name": "element",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "ELEMENT"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "7",
+                "name": "element classes",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "CLASSES"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "8",
+                "name": "element id",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "ID"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "9",
+                "name": "element target",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "TARGET"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "10",
+                "name": "element text",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "TEXT"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "11",
+                "name": "element url",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "URL"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "5",
+                "name": "event",
+                "type": "e",
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "23",
+                "name": "everlastingfairytale.ning.com",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-23729778-1"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "21",
+                "name": "everlastingfa​irytale.ning.com HootanDehbonei",
+                "type": "c",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "value",
+                        "value": "UA-15911328-5"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "16",
+                "name": "history change source",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "HISTORY_CHANGE_SOURCE"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "14",
+                "name": "history new state",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "HISTORY_NEW_STATE"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "12",
+                "name": "history new url fragment",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "HISTORY_NEW_URL_FRAGMENT"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "15",
+                "name": "history old state",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "HISTORY_OLD_STATE"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "13",
+                "name": "history old url fragment",
+                "type": "aev",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "varType",
+                        "value": "HISTORY_OLD_URL_FRAGMENT"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "4",
+                "name": "referrer",
+                "type": "f",
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "1",
+                "name": "url",
+                "type": "u",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "component",
+                        "value": "URL"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "2",
+                "name": "url hostname",
+                "type": "u",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "component",
+                        "value": "HOST"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            },
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "variableId": "3",
+                "name": "url path",
+                "type": "u",
+                "parameter": [
+                    {
+                        "type": "TEMPLATE",
+                        "key": "component",
+                        "value": "PATH"
+                    }
+                ],
+                "fingerprint": "0",
+                "parentFolderId": "3"
+            }
+        ],
+        "folder": [
+            {
+                "accountId": "19646019",
+                "containerId": "754649",
+                "folderId": "3",
+                "name": "Everlasting Fairytale Cultural Forum",
+                "fingerprint": "1444345770768"
+            }
+        ]
+    }
+}

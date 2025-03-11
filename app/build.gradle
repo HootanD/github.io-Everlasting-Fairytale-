@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    signingConfigs {
+        debug {
+            storeFile file('C:\\Users\\hoota\\OneDrive - Everlasting FairytaleTranslators and Interpreters\\Old Computer\\Certificate\\Key Store\\keystore.jks')
+            storePassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+            keyAlias 'Upload'
+            keyPassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+        }
+        release {
+            storeFile file('C:\\Users\\hoota\\OneDrive - Everlasting FairytaleTranslators and Interpreters\\Old Computer\\Certificate\\Key Store\\keystore.jks')
+            storePassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+            keyAlias 'Upload'
+            keyPassword 'AIzaSyDDdcooc4YJIbx0YzWmHXk6o6qJSAwhkOw'
+        }
+    }
+    namespace 'everlastingfairytale.everlastingfairytale.com.everlastingfairytale'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "everlastingfairytale.everlastingfairytale.com.everlastingfairytale"
+        minSdk 33
+        targetSdk 34
+        versionCode 151123 - 1
+        versionName 'everlasting fairytale'
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            versionNameSuffix 'everlastingfairytale'
+            debuggable true
+            jniDebuggable true
+            renderscriptDebuggable true
+            signingConfig signingConfigs.release
+            applicationIdSuffix 'everlastingfairytale.everlastingfairytale.com.everlastingfairytale'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+    buildFeatures {
+        viewBinding true
+    }
+    buildToolsVersion '33.0.1'
+    ndkVersion '23.1.7779620'
+}
+
+dependencies {
+
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

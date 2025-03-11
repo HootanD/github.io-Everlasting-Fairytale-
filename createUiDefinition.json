@@ -1,0 +1,130 @@
+{
+   "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+   "handler": "Microsoft.Azure.CreateUIDef",
+   "version": "0.1.2-preview",
+   "parameters": {
+      "basics": [ ],
+      "steps": [ ],
+      "outputs": {
+   "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+   "handler": "Microsoft.Azure.CreateUIDef",
+   "version": "0.1.2-preview",
+   "parameters": {
+      "basics": [ ],
+      "steps": [ ],
+      "outputs": { },
+      "resourceTypes": [ ]
+   }
+} },
+      "resourceTypes": [ ]
+   }
+{
+  "outTextBox": {
+    "value": "everlastingfairytalesolution"
+  },
+  "outInfoBox": {
+    "value": "Welcome to the Azure Ice Cream Shop"
+  },
+  "outDropDown": {
+    "value": "brown"
+  },
+  "ouOptionsGroup": {
+    "value": "waffle"
+  },
+  "outTextBlock": {
+    "value": "Join our Flavor of the Month club and never miss a single delicious announcement! No spam (no kidding). Must be at least 18 years old to register."
+  },
+  "outSizeSelector": {
+    "value": "Standard_B1s"
+  },
+  "outUserNameTextBox": {
+    "value": "hootandehbonei"
+  },
+  "outCredentialsCombo": {
+    "value": {
+      "authenticationType": "password",
+      "password": "HooT!#53HooM"
+    }
+  },
+  "outStorageAccountSelector": {
+    "value": {
+      "name": "uniquestorageaccount01",
+      "resourceGroup": "EverlastingFairytaleSoultion",
+      "type": "Premium_LRS",
+      "newOrExisting": "new"
+    }
+  },
+  "outMultiStorageAccountCombo": {
+    "value": {
+      "prefix": "aprefix",
+      "type": "Premium_LRS",
+      "resourceGroup": "EverlastingFairytaleSoultion",
+      "count": 2
+    }
+  },
+  "outPublicIpAddressCombo": {
+    "value": {
+      "name": "ip01",
+      "resourceGroup": "EverlastingFairytaleSoultion",
+      "domainNameLabel": "everlastingfairytalesolution",
+      "newOrExistingOrNone": "new",
+      "publicIPAllocationMethod": "Dynamic",
+      "sku": "Basic",
+      "collectorModel": {}
+    }
+  },
+  "outVirtualNetworkCombo": {
+    "value": {
+      "name": "vnet01",
+      "resourceGroup": "EverlastingFairytaleSoultion",
+      "addressPrefixes": [
+        "10.1.0.0/16"
+      ],
+      "newOrExisting": "new",
+      "subnets": {
+        "subnet1": {
+          "name": "subnet-1",
+          "addressPrefix": "10.1.0.0/24",
+          "startAddress": "10.1.0.4"
+        },
+        "subnet2": {
+          "name": "subnet-2",
+          "addressPrefix": "10.1.1.0/26",
+          "startAddress": "10.1.1.4"
+        }
+      }
+    }
+  },
+  "outFileUpload": {
+    "value": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<REPORT xml:lang=\"en-US\" OVERALL_RESULT=\"PASS\" VERSION=\"10.0.18362.1\" LATEST_VERSION=\"TRUE\" UPDATE_DOWNLOAD_URL=\"\" TOOLSET_ARCHITECTURE=\"x64\" SecureBoot=\"FALSE\" APP_TYPE=\"DriverAddin\" OSVERSION=\"10.0.18363.0\" OS=\"Microsoft Windows 10 Enterprise\" PER_USER_APPLICATION=\"FALSE\" PARTIAL_RUN=\"FALSE\" LCID=\"1033\" X64_ONLY=\"FALSE\">\r\n  <REQUIREMENTS>\r\n    <REQUIREMENT NUMBER=\"1\" TITLE=\"Clean reversible install test\" RATIONALE=\"A clean, reversible, installation allows users to successfully manage (deploy, and remove) applications on their system.\" />\r\n    <REQUIREMENT NUMBER=\"5\" TITLE=\"OS version checking test\" RATIONALE=\"Applications must not perform version checks for equality (== 5.1). If you need a specific feature, check whether the feature is available. If you need Windows XP, check for Windows XP or later (&gt;= 5.1), This way, your detection code will continue to work on future versions of Windows. Driver installers and uninstall modules should never check the OS version.\" />\r\n    <REQUIREMENT NUMBER=\"8\" TITLE=\"Safe mode test\" RATIONALE=\"By default, most drivers and services that did not come preinstalled with Windows are not started in Safe Mode. They should remain disabled unless they are needed for basic operations of the system or for diagnostic and recovery purposes.\" />\r\n    <REQUIREMENT NUMBER=\"9\" TITLE=\"Multiuser session test\" RATIONALE=\"Windows users should be able to run concurrent sessions without conflict or disruption.  Applications must ensure that when running in multiple sessions either locally or remotely, the normal functionality of the application should not be impacted. Application settings and data files should not be persisted across users. A user’s privacy and preferences should be isolated to the user’s session.\" />\r\n    <REQUIREMENT NUMBER=\"10\" TITLE=\"Deployment and launch tests\" RATIONALE=\"Application failures such as crashes and hangs are a major disruption to users and cause frustration. Eliminating such failures improves application stability and reliability, and overall, provides users with a better application experience.\" />\r\n    <REQUIREMENT NUMBER=\"11\" TITLE=\"Compatibility and resiliency test\" RATIONALE=\"When Windows detects that an application has operated in an incompatible manner, it applies a compatibility fix that causes the application to behave correctly, ensuring a positive user experience. Applications should not rely on this behavior since it is only provided to allow legacy applications to work correctly on Windows.\" />\r\n  </REQUIREMENTS>\r\n  <APPLICATIONS />\r\n  <DIGITAL_SIGNING />\r\n  <DEPENDENCY_INFORMATION />\r\n</REPORT>"
+  },
+  "outPasswordBox": {
+    "value": "HooT!#53HooM"
+  },
+  "tagsByResource": {
+    "value": {
+      "Microsoft.Storage/storageAccounts": {
+        "defaultExperience": "Core (SQL)",
+        "DESKTOP-D9M7KUN": "B81A3A8FAE7D1D4DEA24BC478D58F8674653D02C",
+        "displayName": "webApp",
+        "hootandehbonei": "1",
+        "marketplaceItemId": "Microsoft.ConnectionGateway",
+        "networkwatcherg": "1",
+        "primaryResourceId": "/subscriptions/ef2bb4d1-f717-489a-9f45-30cbc062bd4d/resourcegroups/AzureBackupRG_australiaeast_1/providers/Microsoft.DocumentDB/databaseAccounts/azurebackuprgaustraliaeast1",
+        "provisioningHash": "SolutionProvider",
+        "VisualStudioOnline-75856ED1792240829EC9E7E203F27CB3": "1"
+      },
+      "Microsoft.Compute/virtualMachines": {
+        "defaultExperience": "Core (SQL)",
+        "DESKTOP-D9M7KUN": "B81A3A8FAE7D1D4DEA24BC478D58F8674653D02C",
+        "displayName": "webApp",
+        "hootandehbonei": "1",
+        "marketplaceItemId": "Microsoft.ConnectionGateway",
+        "networkwatcherg": "1",
+        "primaryResourceId": "/subscriptions/ef2bb4d1-f717-489a-9f45-30cbc062bd4d/resourcegroups/AzureBackupRG_australiaeast_1/providers/Microsoft.DocumentDB/databaseAccounts/azurebackuprgaustraliaeast1",
+        "provisioningHash": "SolutionProvider",
+        "VisualStudioOnline-75856ED1792240829EC9E7E203F27CB3": "1"
+      }
+    }
+  }
+}
