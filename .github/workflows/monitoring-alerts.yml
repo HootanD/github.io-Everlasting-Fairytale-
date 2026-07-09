@@ -1,0 +1,95 @@
+name: Monitoring Alerts - PagerDuty Integration
+
+on:
+  workflow_run:
+    workflows: ["Canary Deployment"]
+    types: [completed]
+
+jobs:
+  send-pagerduty-alert:
+    runs-on: ubuntu-latest
+    if: failure()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Get workflow details
+        id: workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            core.setOutput('conclusion', run.data.conclusion);
+            core.setOutput('html_url', run.data.html_url);
+
+      - name: Create PagerDuty incident
+        if: steps.workflow.outputs.conclusion == 'failure'
+        uses: morrissimo/pagerduty-action@v2
+        with:
+          integration-key: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
+          dedup-key: "deployment-failure-${{ github.run_id }}"
+          action: trigger
+          summary: "Deployment failed - Canary rollback triggered"
+          severity: critical
+          source: "GitHub Actions - ${{ github.repository }}"
+          component: "Deployment Pipeline"
+          custom_details: |
+            {
+              "repository": "${{ github.repository }}",
+              "workflow": "${{ github.event.workflow_run.name }}",
+              "branch": "${{ github.event.workflow_run.head_branch }}",
+              "commit": "${{ github.event.workflow_run.head_commit.id }}",
+              "workflow_url": "${{ steps.workflow.outputs.html_url }}"
+            }
+
+      - name: Resolve PagerDuty incident
+        if: steps.workflow.outputs.conclusion == 'success'
+        uses: morrissimo/pagerduty-action@v2
+        with:
+          integration-key: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
+          dedup-key: "deployment-failure-${{ github.run_id }}"
+          action: resolve
+          summary: "Deployment recovered - No longer in alert state"
+
+  send-datadog-metric:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Send deployment event to Datadog
+        uses: DataDog/github-action-datadog@v2
+        with:
+          api-key: ${{ secrets.DD_API_KEY }}
+          datadog-site: ${{ secrets.DD_SITE || 'datadoghq.com' }}
+          tags: "env:production,service:app,deployment:canary"
+          status: ${{ job.status }}
+
+      - name: Send custom metric to Datadog
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE: ${{ secrets.DD_SITE || 'datadoghq.com' }}
+        run: |
+          curl -X POST \
+            "https://api.${DD_SITE}/api/v1/series" \
+            -H "DD-API-KEY: ${DD_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "series": [
+                {
+                  "metric": "deployment.status",
+                  "points": [[${{ github.event.workflow_run.run_number }}, 1]],
+                  "type": "gauge",
+                  "tags": [
+                    "environment:production",
+                    "service:app",
+                    "workflow:${{ github.event.workflow_run.name }}",
+                    "status:${{ job.status }}"
+                  ]
+                }
+              ]
+            }'

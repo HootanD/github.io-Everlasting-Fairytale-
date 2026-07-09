@@ -1,0 +1,86 @@
+groups:
+  - name: app_alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{container_name=~"app-.*"}[5m]) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High CPU usage on {{ $labels.container_name }}"
+          description: "Container {{ $labels.container_name }} CPU usage is {{ $value | humanizePercentage }}"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (container_memory_usage_bytes{container_name=~"app-.*"} / container_spec_memory_limit_bytes{container_name=~"app-.*"}) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High memory usage on {{ $labels.container_name }}"
+          description: "Container {{ $labels.container_name }} memory is {{ $value | humanizePercentage }}"
+
+      # Container down
+      - alert: ContainerDown
+        expr: |
+          up{job=~"app-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Container {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High error rate on {{ $labels.instance }}"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      # Canary deployment unhealthy
+      - alert: CanaryUnhealthy
+        expr: |
+          up{job="app-canary"} == 0 or rate(http_requests_total{instance="canary",status=~"5.."}[1m]) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Canary deployment is unhealthy"
+          description: "Canary should trigger automatic rollback"
+
+      # Node exporter down
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Node exporter is down"
+          description: "Cannot scrape metrics from node exporter"
+
+      # Prometheus scrape failing
+      - alert: PrometheusScrapeErrors
+        expr: |
+          (increase(prometheus_tsdb_symbol_table_size_bytes[5m]) == 0 and up{job="prometheus"} == 1) or up{job="prometheus"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Prometheus scrape errors detected"
+          description: "Prometheus is having trouble scraping metrics"
