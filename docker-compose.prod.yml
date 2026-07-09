@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Production stable instance (primary)
+  app-stable:
+    image: ${REGISTRY:-docker.io}/${IMAGE_NAME}:production
+    container_name: app-stable
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DEPLOYMENT: stable
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      deployment: stable
+      version: production
+    networks:
+      - production
+
+  # Canary instance (optional, started by workflow)
+  app-canary:
+    image: ${REGISTRY:-docker.io}/${IMAGE_NAME}:production
+    container_name: app-canary
+    environment:
+      NODE_ENV: production
+      PORT: 8081
+      DEPLOYMENT: canary
+    ports:
+      - "8081:8081"
+    restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      deployment: canary
+      version: production
+    networks:
+      - production
+    profiles:
+      - canary  # Only start with --profile canary
+
+  # Load balancer (optional, for traffic splitting)
+  nginx-lb:
+    image: nginx:alpine
+    container_name: app-lb
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app-stable
+    restart: unless-stopped
+    networks:
+      - production
+    profiles:
+      - lb  # Only start with --profile lb
+
+networks:
+  production:
+    driver: bridge

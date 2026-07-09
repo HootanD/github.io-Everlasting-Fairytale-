@@ -1,0 +1,321 @@
+name: Canary Deployment
+
+on:
+  workflow_run:
+    workflows: ["Deploy with Approval Gates"]
+    types: [completed]
+    branches:
+      - main
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+  CANARY_REPLICAS: 1
+  STABLE_REPLICAS: 3
+
+jobs:
+  canary-deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deployment metadata
+        id: deploy
+        run: |
+          echo "canary_tag=canary-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          echo "stable_tag=production" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Create canary deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
+              environment: 'canary',
+              description: 'Canary deployment - monitoring health',
+              auto_merge: false,
+              required_contexts: []
+            });
+            core.setOutput('deployment_id', deployment.data.id);
+
+      - name: Deploy canary (1 replica)
+        id: canary
+        run: |
+          cat > docker-compose.canary.yml << 'EOF'
+          version: '3.8'
+          services:
+            app-canary:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+              container_name: app-canary
+              environment:
+                NODE_ENV: production
+                PORT: 8081
+              ports:
+                - "8081:8081"
+              restart: on-failure:5
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8081"]
+                interval: 10s
+                timeout: 3s
+                retries: 3
+                start_period: 5s
+              labels:
+                - "deployment=canary"
+                - "version=production"
+          EOF
+          docker compose -f docker-compose.canary.yml up -d
+
+      - name: Wait for canary to be healthy
+        id: health
+        run: |
+          echo "Waiting for canary deployment to become healthy..."
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if docker ps | grep -q app-canary; then
+              if docker compose -f docker-compose.canary.yml ps app-canary | grep -q "healthy"; then
+                echo "✓ Canary is healthy"
+                echo "healthy=true" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+            attempt=$((attempt + 1))
+            sleep 2
+          done
+          echo "✗ Canary failed health checks"
+          echo "healthy=false" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Run canary smoke tests
+        if: steps.health.outputs.healthy == 'true'
+        run: |
+          echo "Running smoke tests against canary..."
+          response=$(curl -s http://localhost:8081)
+          if echo "$response" | grep -q "It works"; then
+            echo "✓ Smoke test passed"
+          else
+            echo "✗ Smoke test failed"
+            exit 1
+          fi
+
+      - name: Monitor canary metrics
+        id: metrics
+        if: steps.health.outputs.healthy == 'true'
+        run: |
+          echo "Monitoring canary deployment for 2 minutes..."
+          sleep 120
+          
+          # Simulate metric collection (replace with actual monitoring)
+          error_rate=$(docker logs app-canary 2>&1 | grep -c "error" || echo "0")
+          cpu_usage=$(docker stats --no-stream app-canary --format "{{.CPUPerc}}" | sed 's/%//')
+          mem_usage=$(docker stats --no-stream app-canary --format "{{.MemPerc}}" | sed 's/%//')
+          
+          echo "metrics_collected=true" >> $GITHUB_OUTPUT
+          echo "error_rate=$error_rate" >> $GITHUB_OUTPUT
+          echo "cpu_usage=$cpu_usage" >> $GITHUB_OUTPUT
+          echo "mem_usage=$mem_usage" >> $GITHUB_OUTPUT
+          
+          # Fail if resource usage exceeds thresholds (example: CPU > 80%)
+          if (( $(echo "$cpu_usage > 80" | bc -l 2>/dev/null || echo "0") )); then
+            echo "✗ High CPU usage detected: $cpu_usage%"
+            exit 1
+          fi
+          
+          echo "✓ Canary metrics acceptable"
+
+      - name: Promote canary to stable
+        if: steps.metrics.outputs.metrics_collected == 'true' && success()
+        run: |
+          echo "✓ Canary deployment successful - promoting to stable"
+          docker compose -f docker-compose.canary.yml stop
+          
+          # Scale stable deployment
+          cat > docker-compose.stable.yml << 'EOF'
+          version: '3.8'
+          services:
+            app:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+              container_name: app-stable
+              environment:
+                NODE_ENV: production
+                PORT: 8080
+              ports:
+                - "8080:8080"
+              restart: unless-stopped
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8080"]
+                interval: 30s
+                timeout: 3s
+                retries: 3
+                start_period: 5s
+              labels:
+                - "deployment=stable"
+                - "version=production"
+          EOF
+          docker compose -f docker-compose.stable.yml up -d
+
+      - name: Verify stable deployment
+        if: success()
+        run: |
+          sleep 10
+          response=$(curl -s http://localhost:8080)
+          if echo "$response" | grep -q "It works"; then
+            echo "✓ Stable deployment verified"
+          else
+            echo "✗ Stable deployment verification failed"
+            exit 1
+          fi
+
+      - name: Update deployment status - success
+        uses: actions/github-script@v7
+        if: success()
+        with:
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deploy.outputs.deployment_id }},
+              state: 'success',
+              environment_url: 'http://localhost:8080',
+              description: 'Canary deployment promoted to stable'
+            });
+
+      - name: Notify deployment success
+        uses: slackapi/slack-github-action@v1.24.0
+        if: success() && secrets.SLACK_WEBHOOK_URL != ''
+        with:
+          payload: |
+            {
+              "text": "✓ Canary Deployment Successful",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✓ Canary → Stable Promotion Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n✓ Live"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*CPU Usage:*\n${{ steps.metrics.outputs.cpu_usage }}%"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Memory Usage:*\n${{ steps.metrics.outputs.mem_usage }}%"
+                    }
+                  ]
+                }
+              ]
+            }
+
+  rollback-on-failure:
+    runs-on: ubuntu-latest
+    if: failure() || cancelled()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rollback to previous stable
+        run: |
+          echo "🔄 Rollback triggered - reverting to stable version"
+          
+          # Stop canary
+          docker compose -f docker-compose.canary.yml down 2>/dev/null || true
+          
+          # Ensure stable is running with previous image
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          
+          cat > docker-compose.stable.yml << 'EOF'
+          version: '3.8'
+          services:
+            app:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+              container_name: app-stable
+              environment:
+                NODE_ENV: production
+                PORT: 8080
+              ports:
+                - "8080:8080"
+              restart: unless-stopped
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8080"]
+                interval: 30s
+                timeout: 3s
+                retries: 3
+                start_period: 5s
+          EOF
+          docker compose -f docker-compose.stable.yml up -d
+          
+          sleep 5
+          docker compose -f docker-compose.stable.yml ps
+
+      - name: Verify rollback
+        run: |
+          response=$(curl -s http://localhost:8080)
+          if echo "$response" | grep -q "It works"; then
+            echo "✓ Rollback successful - stable version restored"
+          else
+            echo "✗ Rollback verification failed"
+            exit 1
+          fi
+
+      - name: Notify rollback
+        uses: slackapi/slack-github-action@v1.24.0
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        with:
+          payload: |
+            {
+              "text": "🔄 Automatic Rollback Triggered",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🔄 Automatic Rollback - Production Restored"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Repository:*\n${{ github.repository }}\n*Status:*\n⚠️ Rolled back to stable\n*Reason:*\nCanary deployment failed health checks or metrics thresholds"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Logs"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
