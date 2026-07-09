@@ -1,0 +1,154 @@
+name: Security Scan Notifications
+
+on:
+  workflow_run:
+    workflows: ["Docker Build & Push"]
+    types: [completed]
+
+jobs:
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Download workflow artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            console.log('Artifacts:', artifacts.data.artifacts);
+
+      - name: Get workflow run details
+        id: workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            core.setOutput('conclusion', run.data.conclusion);
+            core.setOutput('name', run.data.name);
+            core.setOutput('html_url', run.data.html_url);
+            core.setOutput('head_branch', run.data.head_branch);
+            core.setOutput('head_commit', run.data.head_commit.message);
+
+      - name: Create security alert issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔒 Security Scan Failed - High/Critical CVE Detected',
+              body: `**Workflow:** ${{ steps.workflow.outputs.name }}\n**Branch:** ${{ steps.workflow.outputs.head_branch }}\n**Commit:** ${{ steps.workflow.outputs.head_commit }}\n\n**Details:**\nA Docker Scout security scan detected high or critical severity vulnerabilities.\n\n**Action Required:**\n1. Review the [workflow logs](${{ steps.workflow.outputs.html_url }}) for details\n2. Update vulnerable dependencies (base image, npm packages)\n3. Re-run the workflow to verify fixes\n\n**Policy:** Builds fail on high/critical CVEs per .github/scout-policy.json`,
+              labels: ['security', 'automated']
+            });
+            console.log('Issue created:', issue.data.html_url);
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        with:
+          payload: |
+            {
+              "text": "🔒 Security Scan Failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🔒 Security Scan Failed - High/Critical CVE"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n${{ steps.workflow.outputs.head_branch }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow:*\n${{ steps.workflow.outputs.name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n❌ Failed"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Commit:*\n${{ steps.workflow.outputs.head_commit }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow"
+                      },
+                      "url": "${{ steps.workflow.outputs.html_url }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Repository"
+                      },
+                      "url": "https://github.com/${{ github.repository }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        if: ${{ secrets.MAIL_USERNAME != '' && secrets.MAIL_PASSWORD != '' }}
+        with:
+          server_address: ${{ secrets.MAIL_SERVER || 'smtp.gmail.com' }}
+          server_port: ${{ secrets.MAIL_PORT || '465' }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "🔒 Security Alert: High/Critical CVE in ${{ github.repository }}"
+          to: ${{ secrets.MAIL_TO || secrets.MAIL_USERNAME }}
+          from: ${{ secrets.MAIL_FROM || secrets.MAIL_USERNAME }}
+          body: |
+            Security Scan Failed
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ steps.workflow.outputs.head_branch }}
+            Workflow: ${{ steps.workflow.outputs.name }}
+            Status: ❌ Failed
+            
+            Commit: ${{ steps.workflow.outputs.head_commit }}
+            
+            Docker Scout detected high or critical severity vulnerabilities in your container image.
+            
+            Action Required:
+            1. Review the workflow logs: ${{ steps.workflow.outputs.html_url }}
+            2. Update vulnerable dependencies (base image or npm packages)
+            3. Re-run the workflow to verify fixes
+            
+            Policy: Builds fail on high/critical CVEs per .github/scout-policy.json
+            
+            Repository: https://github.com/${{ github.repository }}
