@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "name": "High Severity CVE Policy",
+  "description": "Fail builds on high and critical severity CVEs",
+  "policies": [
+    {
+      "name": "High Severity CVE Gate",
+      "rules": [
+        {
+          "type": "vulnerability",
+          "severity": ["critical", "high"],
+          "action": "fail"
+        }
+      ]
+    }
+  ]
+}

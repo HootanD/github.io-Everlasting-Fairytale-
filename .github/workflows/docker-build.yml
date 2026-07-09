@@ -78,6 +78,8 @@ jobs:
           image: test-app:latest
           sarif-file: scout-results.sarif
           write-comment: true
+          exit-code: true
+          policy: .github/scout-policy.json
 
       - name: Upload Scout SARIF report
         uses: github/codeql-action/upload-sarif@v2
