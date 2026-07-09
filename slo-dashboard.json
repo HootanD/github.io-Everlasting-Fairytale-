@@ -1,0 +1,178 @@
+{
+  "dashboard": {
+    "title": "SLO/SLI Dashboard",
+    "panels": [
+      {
+        "title": "Availability SLI (%)",
+        "targets": [
+          {
+            "expr": "sli:request:availability"
+          }
+        ],
+        "type": "gauge",
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "orange", "value": 99},
+                {"color": "green", "value": 99.9}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Error Rate (%)",
+        "targets": [
+          {
+            "expr": "sli:request:error_rate"
+          }
+        ],
+        "type": "gauge",
+        "fieldConfig": {
+          "defaults": {
+            "max": 1,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "orange", "value": 0.05},
+                {"color": "red", "value": 0.1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Latency P95 (ms)",
+        "targets": [
+          {
+            "expr": "sli:request:latency_p95"
+          }
+        ],
+        "type": "gauge",
+        "fieldConfig": {
+          "defaults": {
+            "max": 1000,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "orange", "value": 300},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Latency P99 (ms)",
+        "targets": [
+          {
+            "expr": "sli:request:latency_p99"
+          }
+        ],
+        "type": "gauge",
+        "fieldConfig": {
+          "defaults": {
+            "max": 2000,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "orange", "value": 400},
+                {"color": "red", "value": 500}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Request Rate (req/s)",
+        "targets": [
+          {
+            "expr": "sli:request:throughput"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Availability SLO Trend (99.9% target)",
+        "targets": [
+          {
+            "expr": "sli:request:availability"
+          }
+        ],
+        "type": "graph",
+        "thresholds": [
+          {
+            "value": 99.9,
+            "color": "red",
+            "line": true,
+            "op": "lt"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate Trend (0.1% target)",
+        "targets": [
+          {
+            "expr": "sli:request:error_rate"
+          }
+        ],
+        "type": "graph",
+        "thresholds": [
+          {
+            "value": 0.1,
+            "color": "red",
+            "line": true,
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "title": "Latency Distribution",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "SLO Compliance Summary",
+        "targets": [
+          {
+            "expr": "vector(if(sli:request:availability >= 99.9, 1, 0))",
+            "legendFormat": "Availability"
+          },
+          {
+            "expr": "vector(if(sli:request:latency_p99 <= 500, 1, 0))",
+            "legendFormat": "Latency"
+          },
+          {
+            "expr": "vector(if(sli:request:error_rate <= 0.1, 1, 0))",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "type": "stat"
+      }
+    ]
+  }
+}

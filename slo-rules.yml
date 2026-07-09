@@ -1,0 +1,77 @@
+groups:
+  - name: slo_rules
+    interval: 30s
+    rules:
+      # Availability SLI (successful requests / total requests)
+      - record: sli:request:availability
+        expr: |
+          (1 - (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])))) * 100
+
+      # Latency SLI (requests under 500ms / total requests)
+      - record: sli:request:latency
+        expr: |
+          (sum(rate(http_request_duration_seconds_bucket{le="0.5",route="/"}[5m])) / sum(rate(http_request_duration_seconds_count{route="/"}[5m]))) * 100
+
+      # Throughput (requests per second)
+      - record: sli:request:throughput
+        expr: sum(rate(http_requests_total[1m]))
+
+      # Error rate percentage
+      - record: sli:request:error_rate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100
+
+      # P95 latency in milliseconds
+      - record: sli:request:latency_p95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000
+
+      # P99 latency in milliseconds
+      - record: sli:request:latency_p99
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000
+
+      # SLO: Availability 99.9%
+      - alert: AvailabilitySLOBreach
+        expr: sli:request:availability < 99.9
+        for: 5m
+        labels:
+          severity: warning
+          slo: "availability"
+        annotations:
+          summary: "Availability SLO breach (target: 99.9%, current: {{ $value }}%)"
+          description: "Request availability has dropped below 99.9%"
+
+      # SLO: Latency P99 < 500ms
+      - alert: LatencySLOBreach
+        expr: sli:request:latency_p99 > 500
+        for: 5m
+        labels:
+          severity: warning
+          slo: "latency"
+        annotations:
+          summary: "Latency SLO breach (target: <500ms P99, current: {{ $value }}ms)"
+          description: "P99 latency has exceeded 500ms threshold"
+
+      # SLO: Error rate < 0.1%
+      - alert: ErrorRateSLOBreach
+        expr: sli:request:error_rate > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          slo: "error_rate"
+        annotations:
+          summary: "Error rate SLO breach (target: <0.1%, current: {{ $value }}%)"
+          description: "Error rate has exceeded 0.1% threshold"
+
+      # SLO: Canary availability > 99%
+      - alert: CanaryAvailabilityLow
+        expr: |
+          (1 - (sum(rate(http_requests_total{instance="canary",status=~"5.."}[5m])) / sum(rate(http_requests_total{instance="canary"}[5m])))) * 100 < 99
+        for: 2m
+        labels:
+          severity: critical
+          slo: "canary_availability"
+        annotations:
+          summary: "Canary availability below 99% - triggering rollback"
+          description: "Canary deployment has availability {{ $value }}%"
