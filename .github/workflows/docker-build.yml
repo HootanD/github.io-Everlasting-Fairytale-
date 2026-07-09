@@ -71,6 +71,21 @@ jobs:
             exit 1
           fi
 
+      - name: Run Docker Scout vulnerability scan
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: test-app:latest
+          sarif-file: scout-results.sarif
+          write-comment: true
+
+      - name: Upload Scout SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: scout-results.sarif
+          category: scout
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
