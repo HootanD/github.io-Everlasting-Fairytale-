@@ -1,6 +1,6 @@
 const express = require('express');
 const prometheus = require('prom-client');
-const { NodeTracerProvider } = require('@opentelemetry/node');
+const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { registerInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 const { Resource } = require('@opentelemetry/resources');
