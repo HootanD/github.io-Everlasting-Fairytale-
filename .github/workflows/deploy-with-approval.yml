@@ -1,0 +1,143 @@
+name: Deploy with Approval Gates
+
+on:
+  workflow_run:
+    workflows: ["Docker Build & Push"]
+    types: [completed]
+    branches:
+      - main
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deployment-approval:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: production
+      required-reviewers:
+        - "@me"
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get Docker image metadata
+        id: image
+        run: |
+          echo "tag=${{ github.event.workflow_run.head_branch }}-${{ github.event.workflow_run.head_commit.id }}" >> $GITHUB_OUTPUT
+          echo "sha=${{ github.event.workflow_run.head_commit.id }}" >> $GITHUB_OUTPUT
+
+      - name: Log deployment approval
+        run: |
+          echo "✓ Deployment approved for production"
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}"
+          echo "Commit: ${{ steps.image.outputs.sha }}"
+
+  deploy-with-cache:
+    needs: deployment-approval
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull image from registry cache
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Verify image integrity
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} node -e "console.log('✓ Image verified')"
+
+      - name: Tag for deployment
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+
+      - name: Push deployment tags
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+
+      - name: Log deployment success
+        run: |
+          echo "✓ Deployment complete"
+          echo "Production image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production"
+          echo "Latest image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+
+  notify-deployment:
+    needs: [deployment-approval, deploy-with-cache]
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Notify Slack deployment success
+        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        with:
+          payload: |
+            {
+              "text": "✓ Deployment Successful",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✓ Production Deployment Complete"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n✓ Live"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Image:*\n${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.event.workflow_run.head_commit.id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }

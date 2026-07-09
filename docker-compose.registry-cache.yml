@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  registry-cache:
+    image: registry:2
+    container_name: docker-registry-cache
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+    volumes:
+      - registry-cache-data:/var/lib/registry
+      - ./registry-config.yml:/etc/docker/registry/config.yml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/v2/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  registry-cache-data:
