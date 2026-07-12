@@ -1,0 +1,107 @@
+# GitHub Actions Secrets Setup
+
+Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+
+## Docker Registry Secrets
+- **DOCKER_USERNAME**: Your Docker Hub username
+- **DOCKER_PASSWORD**: Docker Hub personal access token (PAT)
+
+## Kubernetes Secrets
+- **KUBE_CONFIG**: Base64-encoded kubeconfig file
+  ```bash
+  # Generate on your machine:
+  cat ~/.kube/config | base64 -w 0 > kubeconfig.b64
+  # Copy the output to the secret
+  ```
+
+## VPS Deployment Secrets
+- **VPS_HOST**: Your VPS hostname or IP address (e.g., 123.456.789.012)
+- **VPS_USER**: SSH user for VPS (e.g., ubuntu, root, deploy)
+- **VPS_SSH_KEY**: Private SSH key for VPS (base64-encoded)
+  ```bash
+  # Generate/get your SSH key and encode it:
+  cat ~/.ssh/id_rsa | base64 -w 0
+  # Copy the output to the secret
+  ```
+
+## Monitoring & Notifications (Optional)
+- **SLACK_WEBHOOK_URL**: Slack incoming webhook for deployment notifications
+  - Generate at: https://api.slack.com/apps → Your App → Incoming Webhooks
+
+---
+
+## Environment Variables Setup
+
+### VPS Deployment
+Create a `.env` file on your VPS (not in repo):
+```bash
+REGISTRY=docker.io
+IMAGE_NAME=your-username/your-repo
+DOCKER_USERNAME=your-docker-username
+DOCKER_PASSWORD=your-docker-password
+```
+
+Then source it in deployment scripts:
+```bash
+source .env
+```
+
+### Kubernetes
+Update `k8s-manifest.yml` with your actual Docker image:
+```bash
+sed -i 's|docker.io/your-username/your-repo|docker.io/YOUR_USERNAME/YOUR_REPO|g' k8s-manifest.yml
+kubectl apply -f k8s-manifest.yml
+```
+
+---
+
+## Deployment Commands
+
+### Manual Kubernetes Deploy
+```bash
+kubectl apply -f k8s-manifest.yml
+kubectl rollout status deployment/node-app -n node-app
+```
+
+### Manual VPS Deploy
+```bash
+chmod +x deploy-vps.sh
+./deploy-vps.sh main-a1b2c3d production
+```
+
+### Manual Docker Build
+```bash
+docker build -t docker.io/your-username/your-repo:latest .
+docker push docker.io/your-username/your-repo:latest
+```
+
+---
+
+## Workflow Triggers
+
+- **Push to main**: Runs tests → builds image → pushes to registry → deploys to K8s and VPS
+- **Pull Request**: Runs tests → builds image (no push)
+- **Push to develop**: Runs tests → builds image → pushes with 'develop' tag
+
+---
+
+## Monitoring Deployment
+
+### Kubernetes
+```bash
+kubectl get deployment node-app -n node-app
+kubectl get pods -n node-app
+kubectl logs -f deployment/node-app -n node-app
+```
+
+### VPS (Docker Compose)
+```bash
+docker-compose -f docker-compose.prod.yml ps
+docker-compose -f docker-compose.prod.yml logs -f app-stable
+```
+
+### Metrics & Tracing
+- Prometheus: `http://your-vps:9090`
+- Jaeger: `http://your-vps:16686`
+- Tempo: `http://your-vps:3200`
+- App Metrics: `http://your-vps:8080/metrics`

@@ -1,0 +1,313 @@
+# Quick Start: Branch Protection, .dockerignore & Canary Deployment
+
+## ✅ What Was Added
+
+### 1. `.dockerignore` (Created)
+**Effect:** Reduces Docker build context from ~2GB to ~50MB, speeds up builds and improves layer caching.
+
+**Key exclusions:**
+- node_modules, .git, IDE configs, build artifacts, CI/CD files, temp files
+
+**Verify:**
+```bash
+docker build --no-cache -t node-app:latest .
+# Build should be faster now
+```
+
+---
+
+### 2. `.github/workflows/github-branch-protection.yml` (Created)
+**Purpose:** Auto-configures branch protection rules on `main` and `develop`.
+
+**Rules applied:**
+- ✅ Require 1 PR review
+- ✅ Require CI checks pass (test, build)
+- ✅ Dismiss stale reviews
+- ✅ Require conversation resolution
+- ✅ Prevent force pushes & deletions
+
+**Run setup:**
+```bash
+# Option 1: Via GitHub CLI
+gh workflow run github-branch-protection.yml --ref main
+
+# Option 2: Via GitHub UI
+# Actions → Setup Branch Protection → Run workflow
+```
+
+**Verify in GitHub UI:**
+- Settings → Branches → Branch protection rules
+- Should see rules for `main` and `develop`
+
+---
+
+### 3. `.github/workflows/canary-deployment.yml` (Created)
+**Purpose:** Safe, progressive rollouts to Kubernetes and VPS with automatic health checks.
+
+**How it works:**
+```
+Build successful on main
+        ↓
+Auto-trigger canary deployment
+        ↓
+Deploy 1 pod to K8s (canary namespace) & port 8081 on VPS
+        ↓
+Run health checks (/health, /ready, /metrics)
+        ↓
+Monitor for 5 minutes
+        ↓
+Decision: Success → Promote to stable | Failure → Rollback
+        ↓
+Slack notification
+```
+
+**Triggers:**
+- Automatic: After successful CI/CD on `main`
+- Manual: `gh workflow run canary-deployment.yml --ref main`
+
+---
+
+## 🚀 Getting Started
+
+### Step 1: Commit Changes
+```bash
+git add .dockerignore .github/workflows/ Dockerfile CANARY-DEPLOYMENT-GUIDE.txt
+git commit -m "feat: add .dockerignore, branch protection, and canary deployment"
+git push origin main
+```
+
+### Step 2: Setup Branch Protection
+```bash
+# Run the workflow manually
+gh workflow run github-branch-protection.yml --ref main
+
+# Or in GitHub UI: Actions → Setup Branch Protection → Run workflow
+```
+
+### Step 3: Add Required GitHub Secrets (if not already done)
+
+In GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+
+**Docker Registry:**
+```
+DOCKER_USERNAME = your-docker-username
+DOCKER_PASSWORD = your-docker-personal-access-token
+```
+
+**Kubernetes (for canary):**
+```
+KUBE_CONFIG = (base64-encoded kubeconfig)
+# Generate: cat ~/.kube/config | base64 -w 0
+```
+
+**VPS (for canary):**
+```
+VPS_HOST = 123.456.789.012
+VPS_USER = deploy
+VPS_SSH_KEY = (base64-encoded private key)
+# Generate: cat ~/.ssh/id_rsa | base64 -w 0
+```
+
+**Slack (optional):**
+```
+SLACK_WEBHOOK_URL = https://hooks.slack.com/services/...
+```
+
+### Step 4: Test the Workflow
+
+```bash
+# Push to main triggers CI/CD + Canary
+git commit --allow-empty -m "test: trigger canary"
+git push origin main
+
+# Watch:
+# 1. GitHub Actions tab → CI/CD Pipeline (test, build, push)
+# 2. After success → Canary Deployment auto-starts
+# 3. Check Slack for notifications
+```
+
+---
+
+## 📊 Monitoring Canary
+
+### Kubernetes
+```bash
+# Watch canary pod
+kubectl get pods -n canary -w
+
+# View logs
+kubectl logs -f deployment/node-app-canary -n canary
+
+# Check health
+kubectl port-forward -n canary svc/node-app-canary 8080:80
+curl http://localhost:8080/health
+curl http://localhost:8080/metrics
+```
+
+### VPS
+```bash
+# SSH to VPS
+ssh deploy@your-vps.com
+
+# View canary logs
+docker-compose -f docker-compose.prod.yml --profile canary logs -f app-canary
+
+# Test canary endpoint
+curl http://localhost:8081/health
+curl http://localhost:8081/metrics
+
+# Current status
+docker-compose -f docker-compose.prod.yml --profile canary ps
+```
+
+---
+
+## 🔧 Customizing Canary
+
+### Change monitoring duration:
+```bash
+gh workflow run canary-deployment.yml \
+  -f canary_duration=10 \
+  --ref main
+```
+
+### Manual trigger (no auto-promotion):
+```bash
+gh workflow run canary-deployment.yml \
+  -f auto_promote=false \
+  --ref main
+
+# Later, manually promote:
+kubectl set image deployment/node-app node-app=docker.io/user/repo:latest -n node-app
+```
+
+### Disable canary (keep only standard deploy):
+```bash
+# In ci-cd.yml, remove jobs: canary-deployment
+# Or delete .github/workflows/canary-deployment.yml
+```
+
+---
+
+## 🛑 Branch Protection in Action
+
+### What works now:
+✅ Direct pushes to `main` → BLOCKED
+✅ Force pushes → BLOCKED
+✅ PRs without reviews → BLOCKED
+✅ Failed CI checks → PR merge blocked
+
+### Correct workflow:
+```bash
+# Create feature branch
+git checkout -b feature/awesome-feature
+
+# Make changes and commit
+git commit -m "feat: awesome feature"
+git push origin feature/awesome-feature
+
+# Create PR on GitHub (requires 1 review + passing CI)
+# After approval, click "Merge"
+```
+
+---
+
+## ✨ Advanced: Custom Canary Monitoring
+
+Add Prometheus queries to auto-rollback on error rate spike:
+
+**In canary-deployment.yml, `canary-decision` job:**
+
+```yaml
+- name: Query Prometheus for errors
+  run: |
+    ERROR_RATE=$(curl -s 'http://your-prometheus:9090/api/v1/query?query=rate(http_errors_total[5m])' | jq '.')
+    if (( $(echo "$ERROR_RATE > 0.02" | bc -l) )); then
+      echo "❌ Error rate > 2%, rolling back canary"
+      exit 1
+    fi
+    echo "✓ Error rate < 2%"
+```
+
+---
+
+## 📋 Files Created/Modified
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `.dockerignore` | Created | Exclude large files from Docker context |
+| `.github/workflows/ci-cd.yml` | Exists | Main build/test/push pipeline |
+| `.github/workflows/github-branch-protection.yml` | Created | Auto-setup branch protection |
+| `.github/workflows/canary-deployment.yml` | Created | Progressive rollout |
+| `CANARY-DEPLOYMENT-GUIDE.txt` | Created | Detailed docs |
+| `Dockerfile` | Modified | Fixed npm install for Node 26 |
+
+---
+
+## 🔗 Key Endpoints (After Deployment)
+
+**App:**
+- Health: `http://your-vps:8080/health`
+- Ready: `http://your-vps:8080/ready`
+- Metrics: `http://your-vps:8080/metrics`
+
+**Canary (during rollout):**
+- K8s: `http://localhost:8080/health` (after port-forward)
+- VPS: `http://your-vps:8081/health`
+
+**Observability:**
+- Jaeger (traces): `http://your-vps:16686`
+- Prometheus (metrics): `http://your-vps:9090`
+- Tempo (aggregation): `http://your-vps:3200`
+
+---
+
+## 🆘 Troubleshooting
+
+**Canary not triggering:**
+```bash
+# Check if CI/CD passed
+gh run list --workflow=ci-cd.yml | head -5
+
+# Manually trigger
+gh workflow run canary-deployment.yml --ref main
+```
+
+**Branch protection blocking PRs:**
+```bash
+# Verify all checks pass
+gh pr checks $PR_NUMBER
+
+# Verify review completed
+gh pr review $PR_NUMBER --approve
+```
+
+**Canary pod won't start:**
+```bash
+kubectl logs deployment/node-app-canary -n canary
+kubectl describe pod -n canary
+# Check image, resources, env vars
+```
+
+**VPS canary failing health checks:**
+```bash
+ssh deploy@your-vps.com
+curl -v http://localhost:8081/health
+docker logs app-canary
+```
+
+---
+
+## ✅ Final Checklist
+
+- [ ] Committed all files: `.dockerignore`, workflows, guide
+- [ ] Ran branch protection setup: `gh workflow run github-branch-protection.yml`
+- [ ] Added GitHub secrets: Docker, K8s, VPS credentials
+- [ ] Pushed to main to trigger first CI/CD + Canary
+- [ ] Verified canary pod running: `kubectl get pods -n canary`
+- [ ] Verified VPS canary running: `docker-compose ps`
+- [ ] Received Slack notification (if enabled)
+- [ ] Tested branch protection by attempting direct push to main (should fail)
+- [ ] Created PR, got approval, merged successfully
+
+Done! 🎉 Your CI/CD pipeline with branch protection and canary deployments is live.

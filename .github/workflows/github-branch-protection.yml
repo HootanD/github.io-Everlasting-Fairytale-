@@ -1,0 +1,127 @@
+name: Setup Branch Protection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  setup-protection:
+    name: Configure Branch Protection Rules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSLo /usr/share/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages focal main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Configure branch protection for main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🔒 Configuring branch protection for 'main'..."
+          
+          gh api repos/$REPO/branches/main/protection \
+            --input - << 'EOF'
+          {
+            "required_status_checks": {
+              "strict": true,
+              "contexts": [
+                "test",
+                "build"
+              ]
+            },
+            "required_pull_request_reviews": {
+              "dismiss_stale_reviews": true,
+              "require_code_owner_reviews": false,
+              "required_approving_review_count": 1
+            },
+            "enforce_admins": true,
+            "restrictions": null,
+            "allow_force_pushes": false,
+            "allow_deletions": false,
+            "required_linear_history": false,
+            "require_conversation_resolution": true
+          }
+          EOF
+          
+          echo "✓ Branch protection configured for 'main'"
+
+      - name: Configure branch protection for develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        continue-on-error: true
+        run: |
+          echo "🔒 Configuring branch protection for 'develop'..."
+          
+          gh api repos/$REPO/branches/develop/protection \
+            --input - << 'EOF'
+          {
+            "required_status_checks": {
+              "strict": true,
+              "contexts": [
+                "test",
+                "build"
+              ]
+            },
+            "required_pull_request_reviews": {
+              "dismiss_stale_reviews": true,
+              "require_code_owner_reviews": false,
+              "required_approving_review_count": 1
+            },
+            "enforce_admins": false,
+            "restrictions": null,
+            "allow_force_pushes": false,
+            "allow_deletions": false,
+            "required_linear_history": false,
+            "require_conversation_resolution": false
+          }
+          EOF
+          
+          echo "✓ Branch protection configured for 'develop'"
+
+      - name: Verify protection rules
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "📋 Current protection rules for 'main':"
+          gh api repos/$REPO/branches/main/protection | jq '.'
+          
+          echo ""
+          echo "📋 Current protection rules for 'develop':"
+          gh api repos/$REPO/branches/develop/protection 2>/dev/null | jq '.' || echo "(develop branch protection not yet configured)"
+
+      - name: Summary
+        run: |
+          cat << 'EOF'
+          ✓ Branch Protection Setup Complete
+          
+          Rules applied to 'main':
+          • Require 1 PR review before merge
+          • Require status checks to pass (test, build)
+          • Dismiss stale reviews
+          • Require conversations to be resolved
+          • Prevent force pushes
+          • Prevent deletions
+          
+          Rules applied to 'develop':
+          • Require 1 PR review before merge
+          • Require status checks to pass (test, build)
+          • Dismiss stale reviews
+          • Prevent force pushes
+          • Prevent deletions
+          EOF

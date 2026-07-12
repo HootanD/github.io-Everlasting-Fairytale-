@@ -1,0 +1,474 @@
+# Troubleshooting Decision Tree
+
+## I. Workflow Issues
+
+### Q1: Workflow not triggering after push?
+```
+├─ Check: Is branch 'main'?
+│  └─ No → Push to main (canary only runs on main)
+│
+├─ Check: Did CI/CD pass?
+│  ├─ No → Fix test/build errors first, push again
+│  │       → gh run list --branch main
+│  └─ Yes → Continue to Q2
+│
+└─ Check: Are secrets set?
+   ├─ No → Run: ./setup-secrets.ps1 (or .sh)
+   │       → gh secret list (verify)
+   └─ Yes → Continue to Q2
+```
+
+**Action:**
+```bash
+# View workflow run history
+gh run list --branch main --limit 5
+
+# View specific run logs
+gh run view <RUN_ID> --log
+
+# Or check GitHub UI: Actions tab
+```
+
+---
+
+### Q2: CI/CD pipeline failing?
+```
+├─ Check: Test step failing?
+│  ├─ npm install error?
+│  │  └─ Fix: Update package.json, push again
+│  │
+│  └─ npm test failing?
+│     └─ Fix: Update test in package.json or code, push again
+│
+├─ Check: Build step failing?
+│  ├─ Docker build error?
+│  │  ├─ COPY fails? → Verify files exist: ls -la
+│  │  ├─ npm install fails? → Check Dockerfile RUN command
+│  │  └─ Other? → docker build -t test:latest . locally
+│  │
+│  └─ Image push fails?
+│     └─ Fix: Verify DOCKER_USERNAME/PASSWORD secrets correct
+│
+└─ Check: Security scan (Docker Scout) failing?
+   └─ Fix: Review vulnerabilities, update dependencies
+```
+
+**Action:**
+```bash
+# Build locally to debug
+docker build -t test:latest .
+
+# View workflow logs
+gh run view <RUN_ID> --log | tail -50
+
+# Check secrets
+gh secret list
+```
+
+---
+
+### Q3: Status checks failing (PR won't merge)?
+```
+├─ Check: test job status
+│  ├─ Red → Fix test failures
+│  └─ Green → Continue
+│
+├─ Check: build job status
+│  ├─ Red → Fix build failures
+│  └─ Green → Continue
+│
+└─ Check: Branch protection rules
+   ├─ PR needs approval? → Get review from teammate
+   ├─ Conversations unresolved? → Resolve comments
+   └─ Branches not up-to-date? → Click "Update branch"
+```
+
+**Action:**
+```bash
+# View PR check status
+gh pr checks <PR_NUMBER>
+
+# Retry failed checks
+gh run rerun <RUN_ID> --failed
+```
+
+---
+
+## II. Canary Deployment Issues
+
+### Q4: Canary workflow not triggering?
+```
+├─ Check: Did CI/CD pipeline succeed?
+│  └─ No → Fix CI/CD first (go to Q2)
+│
+├─ Check: Is commit on main branch?
+│  └─ No → Merge PR, push to main
+│
+├─ Check: Are K8s/VPS secrets set?
+│  ├─ No → Run: ./setup-secrets.ps1
+│  └─ Yes → Continue
+│
+└─ Manual trigger as backup:
+   └─ gh workflow run canary-deployment.yml --ref main
+```
+
+**Action:**
+```bash
+# List canary runs
+gh run list --workflow=canary-deployment.yml
+
+# Manual trigger
+gh workflow run canary-deployment.yml --ref main
+
+# Check for errors
+gh run view <CANARY_RUN_ID> --log
+```
+
+---
+
+### Q5: Canary-K8s job failing?
+```
+├─ Check: KUBE_CONFIG secret set?
+│  ├─ No → gh secret set KUBE_CONFIG --body "$(cat ~/.kube/config | base64 -w 0)"
+│  └─ Yes → Continue
+│
+├─ Check: Kubeconfig valid?
+│  ├─ Expired? → Update ~/.kube/config, re-encode, update secret
+│  └─ Continue
+│
+├─ Check: Cluster accessible?
+│  ├─ Error: "Unable to connect" → VPN active? Firewall?
+│  └─ Yes → Continue
+│
+└─ Check: Image exists in registry?
+   ├─ No → Verify docker.io push succeeded
+   └─ Yes → Continue
+```
+
+**Action (from local machine):**
+```bash
+# Decode and test kubeconfig
+gh secret view KUBE_CONFIG | base64 -d > /tmp/kube.config
+kubectl --kubeconfig=/tmp/kube.config cluster-info
+
+# Verify image
+docker pull docker.io/your-username/your-repo:commit-sha
+```
+
+---
+
+### Q6: Canary K8s pod won't start?
+```
+├─ Check: Pod status
+│  ├─ Pending? → Insufficient resources (CPU/memory)
+│  │            → Check: kubectl describe node
+│  ├─ ImagePullBackOff? → Image doesn't exist or registry secret
+│  │                     → gh secret set DOCKER_CONFIG? (not needed for public)
+│  ├─ CrashLoopBackOff? → App crashing, continue to Q7
+│  └─ Running? → Health checks may be failing, continue
+│
+└─ Check: Node capacity
+   └─ kubectl top nodes
+```
+
+**Action:**
+```bash
+# Get pod status details
+kubectl get pods -n canary -o wide
+kubectl describe pod -n canary <POD_NAME>
+
+# View pod events
+kubectl get events -n canary --sort-by='.lastTimestamp'
+
+# View pod logs
+kubectl logs -n canary <POD_NAME> --previous  # if crashed
+```
+
+---
+
+### Q7: Canary K8s health checks failing?
+```
+├─ Check: Pod running?
+│  └─ No → Fix pod startup (Q6)
+│
+├─ Check: Health endpoint responding?
+│  ├─ Port-forward: kubectl port-forward -n canary svc/node-app-canary 8080:80
+│  ├─ Test: curl http://localhost:8080/health
+│  ├─ Timeout? → App is slow/unresponsive
+│  └─ 500 error? → App has issues
+│
+├─ Check: App logs
+│  └─ kubectl logs -n canary <POD_NAME>
+│     ├─ Database connection error? → Check JAEGER_ENDPOINT, TEMPO_ENDPOINT env vars
+│     ├─ Port already in use? → Container port conflict
+│     └─ Other error? → Fix in code
+│
+└─ Check: Readiness probe
+   └─ May be too strict; adjust initialDelaySeconds in k8s-manifest.yml
+```
+
+**Action:**
+```bash
+# Manual health check
+kubectl port-forward -n canary svc/node-app-canary 8080:80 &
+sleep 2
+curl -v http://localhost:8080/health
+curl -v http://localhost:8080/ready
+curl -v http://localhost:8080/metrics
+kill %1
+
+# View logs with timestamps
+kubectl logs -n canary <POD_NAME> --timestamps=true
+```
+
+---
+
+### Q8: Canary-VPS job failing?
+```
+├─ Check: VPS_HOST, VPS_USER, VPS_SSH_KEY secrets set?
+│  └─ gh secret list | grep VPS
+│
+├─ Check: VPS SSH key valid?
+│  ├─ Generate: cat ~/.ssh/id_rsa | base64 -w 0
+│  └─ Update: gh secret set VPS_SSH_KEY --body "..."
+│
+├─ Check: VPS host reachable?
+│  ├─ ssh -i ~/.ssh/id_rsa deploy@<VPS_HOST> echo "OK"
+│  ├─ Connection refused? → VPS IP/hostname wrong, or VPN needed
+│  └─ Permission denied? → SSH key doesn't match VPS authorized_keys
+│
+├─ Check: Docker available on VPS?
+│  └─ ssh deploy@<VPS_HOST> docker ps
+│
+└─ Check: docker-compose.prod.yml on VPS?
+   └─ ssh deploy@<VPS_HOST> ls -la docker-compose.prod.yml
+```
+
+**Action (from local machine):**
+```bash
+# Test SSH connection
+ssh -i ~/.ssh/id_rsa deploy@<VPS_HOST> echo "SSH works"
+
+# Test Docker access
+ssh deploy@<VPS_HOST> docker ps
+
+# Test docker-compose
+ssh deploy@<VPS_HOST> docker-compose -f docker-compose.prod.yml ps
+
+# View workflow logs for exact error
+gh run view <CANARY_RUN_ID> --log
+```
+
+---
+
+### Q9: Canary VPS health checks failing?
+```
+├─ Check: Container running?
+│  └─ ssh deploy@<VPS_HOST> docker ps | grep app-canary
+│
+├─ Check: Container healthy?
+│  ├─ docker logs app-canary (view errors)
+│  ├─ Port 8081 open? → docker inspect app-canary | grep Ports
+│  └─ Firewall blocking? → Check VPS firewall rules
+│
+├─ Check: Health endpoint responding?
+│  └─ ssh deploy@<VPS_HOST> curl http://localhost:8081/health
+│     ├─ Connection refused? → Container not listening on 8081
+│     ├─ Timeout? → Container slow/hanging
+│     └─ 500 error? → App error, check logs
+│
+└─ Check: Environment variables
+   └─ docker inspect app-canary | grep -A 10 "Env"
+      ├─ NODE_ENV=production?
+      ├─ JAEGER_ENDPOINT set? → Check if Jaeger running
+      └─ TEMPO_ENDPOINT set? → Check if Tempo running
+```
+
+**Action:**
+```bash
+# SSH to VPS
+ssh deploy@<VPS_HOST>
+
+# Check container status
+docker-compose -f docker-compose.prod.yml --profile canary ps
+
+# View logs
+docker-compose -f docker-compose.prod.yml --profile canary logs -f app-canary
+
+# Manual health test
+curl -v http://localhost:8081/health
+curl -v http://localhost:8081/ready
+curl -v http://localhost:8081/metrics
+
+# Check resource usage
+docker stats app-canary
+
+# Restart container
+docker-compose -f docker-compose.prod.yml --profile canary restart app-canary
+```
+
+---
+
+## III. Branch Protection Issues
+
+### Q10: Branch protection not active?
+```
+├─ Check: Workflow ran successfully?
+│  └─ gh run list --workflow=github-branch-protection.yml
+│     ├─ Red → View logs: gh run view <RUN_ID> --log
+│     └─ Green → Continue
+│
+├─ Check: Rules visible in GitHub?
+│  └─ Settings → Branches → Branch protection rules
+│     ├─ Empty? → Rules not applied, continue
+│     └─ Rules listed? → Continue
+│
+└─ Test branch protection
+   ├─ Try to push directly to main
+   └─ Should be blocked with: "This branch has 1 required status check"
+```
+
+**Action:**
+```bash
+# Re-run branch protection setup
+gh workflow run github-branch-protection.yml --ref main
+
+# Verify rules
+gh api repos/YOUR_REPO/branches/main/protection | jq '.required_status_checks'
+
+# Manual test
+git commit --allow-empty -m "test"
+git push origin main
+# Should fail
+```
+
+---
+
+### Q11: PR merge blocked, don't know why?
+```
+├─ Check: All status checks green?
+│  └─ gh pr checks <PR_NUMBER> | grep -i "pass\|fail"
+│     ├─ Some red → Fix those (see Q2)
+│     └─ All green → Continue
+│
+├─ Check: Approved?
+│  └─ gh pr view <PR_NUMBER> | grep -i review
+│     ├─ No reviews → Request review
+│     └─ 1+ approved → Continue
+│
+├─ Check: Conversations resolved?
+│  └─ GitHub UI → PR page → "Conversation" tab
+│     ├─ Unresolved comments? → Resolve them
+│     └─ All resolved? → Continue
+│
+└─ Check: Branches up to date?
+   └─ GitHub UI → PR page → "Details" section
+      ├─ "This branch is behind main"? → Click "Update branch"
+      └─ Up to date? → Merge should work now
+```
+
+**Action:**
+```bash
+# View PR checks
+gh pr checks <PR_NUMBER>
+
+# Request review
+gh pr review <PR_NUMBER> --request-review @teammate
+
+# Approve (if you're a reviewer)
+gh pr review <PR_NUMBER> --approve
+
+# Resolve and retry
+git push origin branch-name
+```
+
+---
+
+## IV. General Debugging
+
+### Check Overall Health
+```bash
+# 1. Verify GitHub CLI authenticated
+gh auth status
+
+# 2. Check secrets
+gh secret list
+
+# 3. View recent runs
+gh run list --limit 5
+
+# 4. Check branch protection
+gh api repos/YOUR_REPO/branches/main/protection | jq '.'
+
+# 5. Test Docker image locally
+docker build -t test:latest .
+docker run --rm test:latest node -e "console.log('OK')"
+
+# 6. If deploying to K8s
+kubectl cluster-info
+kubectl get ns | grep canary
+
+# 7. If deploying to VPS
+ssh deploy@<VPS_HOST> docker ps
+```
+
+### Collect Diagnostics
+```bash
+# Save all logs
+mkdir -p /tmp/diagnostics
+
+# GitHub workflow logs
+gh run list --limit 1 --branch main | awk '{print $1}' | xargs -I {} gh run view {} --log > /tmp/diagnostics/ci-cd-logs.txt
+
+# K8s logs
+kubectl logs -n canary deployment/node-app-canary > /tmp/diagnostics/k8s-canary.txt 2>&1
+kubectl describe pod -n canary > /tmp/diagnostics/k8s-pod-describe.txt 2>&1
+
+# VPS logs
+ssh deploy@<VPS_HOST> docker-compose -f docker-compose.prod.yml --profile canary logs > /tmp/diagnostics/vps-canary.txt 2>&1
+
+# Share diagnostics for debugging
+cat /tmp/diagnostics/*.txt
+```
+
+---
+
+## V. Quick Reference
+
+### Common Commands
+```bash
+# GitHub
+gh auth status                                    # Check login
+gh secret list                                   # View secrets
+gh run list --branch main --limit 5              # Recent runs
+gh run view <RUN_ID> --log                       # View logs
+gh workflow run <WORKFLOW> --ref main            # Manual trigger
+
+# Kubernetes
+kubectl get pods -n canary                       # List canary pods
+kubectl logs -f deployment/node-app-canary -n canary  # View logs
+kubectl port-forward -n canary svc/node-app-canary 8080:80
+kubectl describe pod -n canary <POD_NAME>        # Pod details
+
+# VPS/SSH
+ssh deploy@<VPS_HOST>                            # SSH to VPS
+docker-compose -f docker-compose.prod.yml --profile canary ps
+docker logs app-canary                           # View container logs
+curl http://localhost:8081/health                # Test endpoint
+```
+
+### Finding Run IDs
+```bash
+# Latest run
+gh run list --limit 1 | awk '{print $1}'
+
+# Latest canary run
+gh run list --workflow=canary-deployment.yml --limit 1 | awk '{print $1}'
+
+# View specific workflow
+gh workflow view canary-deployment.yml
+```
+
+---
+
+**Still stuck? Check EXECUTE-DEPLOYMENT.txt for step-by-step walkthroughs or CANARY-DEPLOYMENT-GUIDE.txt for detailed explanations.**

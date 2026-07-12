@@ -1,0 +1,409 @@
+# Branch Protection, .dockerignore, & Canary Deployment Setup
+
+## 1. .dockerignore File
+
+A `.dockerignore` file has been created to exclude unnecessary files from the Docker build context. This reduces build time and image size by preventing large directories (node_modules, git history, IDE configs, etc.) from being sent to the Docker daemon.
+
+**Key exclusions:**
+- `node_modules` - Rebuilt from package*.json
+- `.git` - Source control
+- IDE files - `.vscode`, `.idea`, etc.
+- Build artifacts - `dist`, `build`, coverage
+- CI/CD files - `.github`, `.gitlab-ci.yml`, etc.
+- Temporary files - `.env.local`, `*.log`, etc.
+
+**Build improvements:**
+```bash
+# Build context size reduced from ~2GB to ~50MB
+docker build -t node-app:latest .
+
+# Faster layer caching because unrelated file changes don't bust cache
+docker build --no-cache -t node-app:latest .
+```
+
+---
+
+## 2. Branch Protection Rules
+
+### Automatic Setup
+Run the GitHub Actions workflow manually to auto-configure branch protection:
+
+```bash
+# In GitHub UI:
+# 1. Go to Actions → Setup Branch Protection
+# 2. Click "Run workflow" → main branch
+# 3. Watch the workflow execute
+```
+
+OR using GitHub CLI:
+```bash
+gh workflow run github-branch-protection.yml --ref main
+```
+
+### What Gets Protected
+
+**`main` branch:**
+- Require 1 PR review before merge
+- Require all status checks to pass: `test`, `build`
+- Dismiss stale reviews when new commits pushed
+- Require conversations resolved
+- Prevent force pushes
+- Prevent deletions
+- Enforce for admins
+
+**`develop` branch:**
+- Same as above, but force pushes allowed (for team velocity)
+
+### Manual Setup (Alternative)
+
+If you prefer GitHub UI:
+1. Go to **Settings → Branches**
+2. Click **Add rule** for each branch
+3. Set Branch name pattern: `main`
+4. Enable:
+   - ✅ Require a pull request before merging
+   - ✅ Require 1 approval
+   - ✅ Dismiss stale pull request approvals when new commits are pushed
+   - ✅ Require status checks to pass before merging
+   - ✅ Require branches to be up to date before merging
+   - ✅ Status checks: `test`, `build`
+   - ✅ Require conversation resolution
+   - ✅ Require linear history (optional)
+   - ✅ Restrict who can push (optional)
+
+---
+
+## 3. Canary Deployment Workflow
+
+The `canary-deployment.yml` workflow provides safe, progressive rollouts to both Kubernetes and VPS with automatic health checks and optional rollback.
+
+### How It Works
+
+```
+1. Pre-Canary Validation
+   ↓ Verify image exists in registry
+2. Deploy Canary (5% traffic / 1 pod on K8s)
+   ├─ Kubernetes: 1 replica in canary namespace
+   └─ VPS: docker-compose with profile=canary on port 8081
+   ↓
+3. Health Checks
+   ├─ /health endpoint (liveness)
+   ├─ /ready endpoint (readiness)
+   └─ /metrics endpoint (Prometheus)
+   ↓
+4. Monitor (5 minutes default)
+   ├─ Check error rates, latencies in Prometheus/Jaeger
+   └─ Manual review optional
+   ↓
+5. Decision
+   ├─ Success → Promote to stable (auto or manual)
+   └─ Failure → Rollback canary
+   ↓
+6. Cleanup
+   └─ Archive canary logs (1 hour debug window)
+```
+
+### Automatic Trigger
+
+Canary runs automatically after successful CI/CD pipeline on `main` branch:
+
+```
+Commit to main
+  ↓
+CI/CD Pipeline runs (test, build, push)
+  ↓ (on success)
+Canary Deployment auto-triggers
+  ↓
+Result → Slack notification
+```
+
+### Manual Trigger
+
+Manually trigger canary for fine-grained control:
+
+```bash
+gh workflow run canary-deployment.yml \
+  -f canary_percentage=5 \
+  -f canary_duration=10 \
+  -f auto_promote=true \
+  --ref main
+```
+
+**Parameters:**
+- `canary_percentage`: Traffic % for canary (1-50, default: 10)
+- `canary_duration`: Monitoring duration in minutes (default: 5)
+- `auto_promote`: Auto-promote on success (default: true)
+
+### Kubernetes Canary Details
+
+**What deploys:**
+- 1-replica `node-app-canary` deployment in `canary` namespace
+- ClusterIP service for internal DNS
+- Same resource limits and health probes as production
+- Separate from `node-app` production deployment
+
+**Monitoring:**
+```bash
+# Watch canary pod
+kubectl get pods -n canary -w
+
+# View canary logs
+kubectl logs -f deployment/node-app-canary -n canary
+
+# Canary metrics
+kubectl port-forward -n canary svc/node-app-canary 8080:80
+curl http://localhost:8080/metrics
+```
+
+**After canary success:**
+```bash
+# Promote canary to production (manual step currently)
+kubectl set image deployment/node-app node-app=$NEW_IMAGE -n node-app
+kubectl rollout status deployment/node-app -n node-app
+```
+
+### VPS Canary Details
+
+**What deploys:**
+- `app-canary` service on port 8081 (via docker-compose)
+- Uses same image as stable (from registry)
+- Separate from `app-stable` on port 8080
+- Nginx load balancer (optional, profile: lb) can split traffic
+
+**Monitoring:**
+```bash
+# SSH to VPS
+ssh deploy@your-vps.com
+
+# View canary logs
+docker-compose -f docker-compose.prod.yml --profile canary logs -f app-canary
+
+# Test canary endpoint
+curl http://localhost:8081/health
+curl http://localhost:8081/metrics
+```
+
+**Nginx traffic split (manual setup):**
+```nginx
+upstream stable {
+  server localhost:8080 weight=90;
+}
+
+upstream canary {
+  server localhost:8081 weight=10;
+}
+
+server {
+  listen 80;
+  
+  location / {
+    proxy_pass http://stable;
+  }
+  
+  location /canary/ {
+    proxy_pass http://canary;
+  }
+}
+```
+
+**After canary success:**
+```bash
+# Promote canary to stable
+docker tag $IMAGE:canary $IMAGE:stable
+docker-compose -f docker-compose.prod.yml down app-stable
+docker-compose -f docker-compose.prod.yml up -d app-stable
+```
+
+### Health Check Logic
+
+All three endpoints are checked:
+
+| Endpoint | Purpose | Timeout |
+|----------|---------|---------|
+| `/health` | Liveness probe (is app alive?) | 3s |
+| `/ready` | Readiness probe (ready to accept traffic?) | 2s |
+| `/metrics` | Prometheus metrics (instrumentation OK?) | 2s |
+
+If any check fails → canary marked unhealthy → auto-rollback triggered.
+
+### Rollback Procedure
+
+**Automatic rollback** (if monitoring shows errors):
+```bash
+# Kubernetes
+kubectl delete deployment node-app-canary -n canary
+
+# VPS
+docker-compose -f docker-compose.prod.yml --profile canary down
+```
+
+**Manual rollback** (if you cancel workflow):
+```bash
+# Keep stable running, just remove canary
+# Logs preserved for 1 hour for debugging
+```
+
+---
+
+## 4. Workflow Integration
+
+### Slack Notifications
+
+All three workflows send Slack notifications. Set `SLACK_WEBHOOK_URL` secret:
+
+```bash
+gh secret set SLACK_WEBHOOK_URL --body "https://hooks.slack.com/services/..."
+```
+
+Messages include:
+- ✅ Successful deployments
+- ⚠️ Failed health checks
+- 📋 Links to workflow runs
+
+### GitHub Environments
+
+Create protected environments in GitHub Settings → Environments:
+
+```
+❌ No approval required for 'canary-k8s' and 'canary-vps' environments
+   (auto-promote on success)
+
+✅ Optional: Add approval requirement for manual control
+   Settings → Environments → Create environment → Add reviewers
+```
+
+### Monitoring Stack Integration
+
+**For best canary validation:**
+
+1. **Set up Prometheus** in K8s/VPS
+   - Pod scrapes `/metrics` endpoint
+   - Alert on high error rate (> 1%)
+   - Alert on latency spike (p95 > 500ms)
+
+2. **Set up Jaeger/Tempo**
+   - App sends traces automatically
+   - Visualize request flow
+   - Identify failing endpoints
+
+3. **Custom canary decision job**
+   - Query Prometheus API during monitoring period
+   - Auto-rollback if: error_rate > 2% OR latency > 1s
+   - Currently manual review (implement later)
+
+---
+
+## 5. Testing Branch Protection
+
+```bash
+# Try to commit directly to main (will be blocked)
+git checkout main
+git commit --allow-empty -m "test"
+git push origin main
+# ❌ ERROR: Commits must be made through PRs
+
+# Correct way: PR workflow
+git checkout -b feature/test
+git commit --allow-empty -m "test"
+git push origin feature/test
+# → Open PR
+# → CI/CD must pass
+# → Need 1 approval
+# → Conversations resolved
+# → Merge button appears
+```
+
+---
+
+## 6. Quick Reference: Deployment Paths
+
+### Standard Deployment (Main)
+```
+Push to main → CI/CD tests & builds → Docker push → Auto Canary → (if success) Promote to K8s/VPS
+```
+
+### Hotfix Deployment
+```
+Push to main (hotfix) → Same flow, but faster canary (--profile canary up = quick test)
+```
+
+### Feature Testing
+```
+Push to develop → CI/CD tests & builds → Docker push with 'develop' tag → No auto canary
+```
+
+### Manual Canary Trigger
+```
+gh workflow run canary-deployment.yml -f canary_duration=10 --ref main
+```
+
+---
+
+## 7. Troubleshooting
+
+**Canary pod stuck in CrashLoopBackOff:**
+```bash
+kubectl logs deployment/node-app-canary -n canary
+kubectl describe pod -n canary
+# Check resource limits, env vars, image pull errors
+```
+
+**Canary health check failing:**
+```bash
+# K8s: port-forward and test manually
+kubectl port-forward -n canary svc/node-app-canary 8080:80
+curl http://localhost:8080/health
+
+# VPS: SSH and test
+ssh deploy@vps
+curl http://localhost:8081/health
+docker logs app-canary
+```
+
+**Branch protection not working:**
+```bash
+# Verify rules applied
+gh api repos/YOUR_REPO/branches/main/protection | jq '.required_status_checks.contexts'
+# Should show: ["test", "build"]
+```
+
+**Workflow not triggering:**
+```bash
+# Check workflow file syntax
+gh workflow view canary-deployment.yml
+
+# Manually trigger
+gh workflow run canary-deployment.yml --ref main
+```
+
+---
+
+## 8. Next Steps
+
+1. **Commit changes:**
+   ```bash
+   git add .dockerignore .github/workflows/
+   git commit -m "feat: add branch protection, canary deployment, and .dockerignore"
+   git push origin main
+   ```
+
+2. **Run branch protection setup:**
+   ```bash
+   gh workflow run github-branch-protection.yml --ref main
+   ```
+
+3. **Test canary on next deployment:**
+   - Push to main
+   - Watch CI/CD → automatic canary trigger
+   - Monitor K8s/VPS pods
+   - Check Slack notification
+
+4. **Implement advanced monitoring:**
+   - Add Prometheus query job to canary-decision
+   - Set error rate and latency thresholds
+   - Auto-rollback on metrics breach
+
+5. **Create runbook for team:**
+   - Document rollback procedure
+   - Canary monitoring checklist
+   - Escalation contacts

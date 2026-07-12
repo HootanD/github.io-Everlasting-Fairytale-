@@ -1,0 +1,464 @@
+# Execute: Setup Branch Protection & Deploy Canary
+
+This guide walks through:
+1. ✅ Setting up GitHub Secrets
+2. ✅ Activating Branch Protection
+3. ✅ Triggering first CI/CD + Canary deployment
+4. ✅ Monitoring Kubernetes canary
+5. ✅ Monitoring VPS canary
+
+---
+
+## Step 1: Authenticate with GitHub CLI
+
+If not already authenticated:
+
+```bash
+# macOS/Linux
+gh auth login
+
+# Windows PowerShell
+gh auth login
+```
+
+Follow prompts to create/enter your GitHub Personal Access Token.
+
+---
+
+## Step 2: Prepare Your Credentials
+
+Gather the following before running the setup script:
+
+### Docker Credentials (Required)
+- Docker username: `your-docker-username`
+- Docker PAT: `dckr_pat_xxxxx`
+  (Generate at: https://hub.docker.com/settings/security)
+
+### VPS Credentials (If deploying to VPS)
+- VPS hostname/IP: `192.168.1.100` or `vps.example.com`
+- VPS SSH user: `ubuntu` or `deploy`
+- SSH private key (base64-encoded):
+  ```bash
+  # macOS/Linux
+  cat ~/.ssh/id_rsa | base64 -w 0
+  
+  # Windows PowerShell
+  [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$env:USERPROFILE\.ssh\id_rsa"))
+  ```
+
+### Kubernetes Credentials (If deploying to K8s)
+- Kubeconfig (base64-encoded):
+  ```bash
+  # macOS/Linux
+  cat ~/.kube/config | base64 -w 0
+  
+  # Windows PowerShell
+  [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$env:USERPROFILE\.kube\config"))
+  ```
+
+### Slack Webhook (Optional, for notifications)
+- Generate at: https://api.slack.com/apps
+- Look for "Incoming Webhooks" → "Add New Webhook to Workspace"
+- URL format: `https://hooks.slack.com/services/YOUR/WEBHOOK/URL`
+
+---
+
+## Step 3: Set Up Secrets
+
+### Option A: Interactive Script (Windows PowerShell)
+
+```powershell
+.\setup-secrets.ps1 `
+  -DockerUsername "everlastingfairytale" `
+  -DockerPassword "dckr_pat_hPbX9Je-9-TG_c9pjQcDA9E1B46Nz-l-" `
+  -VpsHost "192.168.1.100" `
+  -VpsUser "ubuntu" `
+  -VpsSshKey "LS0tLS1CRUdJTi..." `
+  -SlackWebhook "https://hooks.slack.com/services/T..."
+```
+
+### Option B: Bash Script (macOS/Linux)
+
+```bash
+./setup-secrets.sh \
+  --docker-username everlastingfairytale \
+  --docker-password "dckr_pat_hPbX9Je-9-TG_c9pjQcDA9E1B46Nz-l-" \
+  --vps-host 192.168.1.100 \
+  --vps-user ubuntu \
+  --vps-ssh-key "$(cat ~/.ssh/id_rsa | base64 -w 0)" \
+  --slack-webhook "https://hooks.slack.com/services/T..."
+```
+
+### Option C: Manual Setup (GitHub UI)
+
+1. Go to GitHub: **Settings → Secrets and variables → Actions**
+2. Click **New repository secret** for each:
+
+```
+DOCKER_USERNAME = everlastingfairytale
+DOCKER_PASSWORD = dckr_pat_...
+VPS_HOST = 192.168.1.100
+VPS_USER = ubuntu
+VPS_SSH_KEY = LS0tLS1CRUdJTi...
+KUBE_CONFIG = YXBpVmVyc2lvbjogdjE...
+SLACK_WEBHOOK_URL = https://hooks.slack.com/services/...
+```
+
+---
+
+## Step 4: Verify Secrets Were Set
+
+```bash
+gh secret list
+```
+
+Output should show:
+```
+DOCKER_PASSWORD     Updated 2 seconds ago
+DOCKER_USERNAME     Updated 5 seconds ago
+KUBE_CONFIG         Updated 10 seconds ago
+SLACK_WEBHOOK_URL   Updated 15 seconds ago
+VPS_HOST            Updated 20 seconds ago
+VPS_SSH_KEY         Updated 25 seconds ago
+VPS_USER            Updated 30 seconds ago
+```
+
+---
+
+## Step 5: Activate Branch Protection
+
+Run the GitHub Actions workflow manually:
+
+```bash
+gh workflow run github-branch-protection.yml --ref main
+```
+
+**Or via GitHub UI:**
+1. Go to **Actions** tab
+2. Click **Setup Branch Protection** on the left
+3. Click **Run workflow** dropdown
+4. Select **main** branch
+5. Click **Run workflow** button
+
+**Watch the workflow:**
+```bash
+gh run list --workflow=github-branch-protection.yml --limit 1
+
+# Or follow live:
+gh run watch <RUN_ID>
+```
+
+**Expected output in GitHub Actions:**
+```
+✓ Configure branch protection for 'main'
+✓ Configure branch protection for 'develop'
+✓ Verify protection rules
+✓ Summary
+```
+
+**Verify in GitHub:**
+1. Go to **Settings → Branches**
+2. Check "Branch protection rules" section
+3. Should see rules for `main` and `develop`
+
+---
+
+## Step 6: Commit & Push Changes to Main
+
+This triggers the CI/CD pipeline, which auto-triggers canary deployment:
+
+```bash
+# Verify all files are staged
+git status
+
+# Should show:
+#   modified: Dockerfile
+#   new file: .dockerignore
+#   new file: .github/workflows/ci-cd.yml
+#   new file: .github/workflows/canary-deployment.yml
+#   new file: .github/workflows/github-branch-protection.yml
+#   new file: CANARY-DEPLOYMENT-GUIDE.txt
+#   new file: QUICK-START.txt
+#   new file: setup-secrets.sh
+#   new file: setup-secrets.ps1
+#   etc.
+
+# Commit
+git add .
+git commit -m "feat: add branch protection, canary deployment, and .dockerignore"
+
+# Push to main (now protected - but this push is allowed since you're committer)
+git push origin main
+```
+
+---
+
+## Step 7: Monitor CI/CD Pipeline
+
+After push, watch the workflows:
+
+```bash
+# List recent runs
+gh run list --branch main --limit 5
+
+# Watch specific run
+gh run watch <RUN_ID>
+
+# Or view in GitHub UI:
+# Actions → select run → click on job
+```
+
+**Expected workflow sequence:**
+```
+1. ✓ CI/CD Pipeline
+   ├─ test (npm install, npm test, linting)
+   ├─ build (Docker build, push to registry)
+   └─ (no K8s/VPS deploy on this push since it's your setup commit)
+
+2. ✓ Canary Deployment (auto-triggers after CI/CD success)
+   ├─ canary-check (verify image in registry)
+   ├─ canary-k8s (deploy to K8s canary namespace)
+   ├─ canary-vps (deploy to VPS port 8081)
+   ├─ canary-monitor (wait 5 minutes)
+   ├─ canary-decision (success/failure assessment)
+   ├─ canary-cleanup (archive logs)
+   └─ notify-canary-result (Slack message)
+```
+
+---
+
+## Step 8: Monitor Kubernetes Canary
+
+If deploying to Kubernetes:
+
+```bash
+# Watch canary pods in real-time
+kubectl get pods -n canary -w
+
+# In another terminal, view logs
+kubectl logs -f deployment/node-app-canary -n canary
+
+# Check canary service
+kubectl get svc -n canary
+
+# Port-forward to test manually
+kubectl port-forward -n canary svc/node-app-canary 8080:80
+curl http://localhost:8080/health
+curl http://localhost:8080/ready
+curl http://localhost:8080/metrics
+```
+
+**Expected K8s Canary Sequence:**
+```
+1. Namespace 'canary' created
+2. Deployment 'node-app-canary' created with 1 replica
+3. Pod enters 'Pending' → 'ContainerCreating' → 'Running'
+4. Container passes readiness probe
+5. Health checks succeed
+6. After 5-minute monitoring window → Success or Rollback
+```
+
+**Troubleshooting K8s Canary:**
+```bash
+# Pod stuck?
+kubectl describe pod -n canary <POD_NAME>
+
+# Image pull issue?
+kubectl get events -n canary --sort-by='.lastTimestamp'
+
+# Resource limits exceeded?
+kubectl top pods -n canary
+```
+
+---
+
+## Step 9: Monitor VPS Canary
+
+If deploying to VPS:
+
+```bash
+# SSH to your VPS
+ssh deploy@your-vps-ip
+
+# View canary logs
+docker-compose -f docker-compose.prod.yml --profile canary logs -f app-canary
+
+# Check running services
+docker-compose -f docker-compose.prod.yml --profile canary ps
+
+# Manual health check
+curl http://localhost:8081/health
+curl http://localhost:8081/ready
+curl http://localhost:8081/metrics
+
+# View metrics
+curl http://localhost:8081/metrics | head -20
+
+# Monitor in separate terminal
+docker stats app-canary
+```
+
+**Expected VPS Canary Sequence:**
+```
+1. Docker image pulled from registry
+2. 'app-canary' container started on port 8081
+3. Health check runs (curl to /health, /ready, /metrics)
+4. After 5-minute monitoring window → Success or Rollback
+```
+
+**Troubleshooting VPS Canary:**
+```bash
+ssh deploy@your-vps-ip
+
+# Container won't start?
+docker-compose -f docker-compose.prod.yml --profile canary up -d app-canary
+docker logs app-canary
+
+# Health check failing?
+curl -v http://localhost:8081/health
+
+# Port 8081 already in use?
+netstat -tulpn | grep 8081
+# Kill old container: docker kill app-canary
+
+# Disk space issues?
+df -h
+docker system prune -a
+```
+
+---
+
+## Step 10: Check Canary Results
+
+After 5-minute monitoring period:
+
+### Via GitHub UI
+1. **Actions** tab → **Canary Deployment** workflow
+2. Click the run
+3. Check **canary-decision** job
+
+### Via GitHub CLI
+```bash
+gh run view <CANARY_RUN_ID> --log
+```
+
+### Via Slack
+If enabled, you'll receive a notification:
+```
+✅ Canary Deployment Successful
+Repository: everlastingfairytale/...
+Image: docker.io/everlastingfairytale/...:abc1234
+Commit: [link]
+```
+
+### Expected Outcomes
+
+**Success:**
+- Canary pods running healthy for 5 minutes
+- No errors in health checks
+- Error rate < 2% (if Prometheus monitoring enabled)
+- Ready for promotion to stable
+
+**Failure:**
+- Health check timeout
+- Pod crash loop
+- High error rate detected
+- Automatic rollback triggered
+- Review logs for root cause
+
+---
+
+## Step 11: Manual Canary Control
+
+### Extend Monitoring Period
+```bash
+gh workflow run canary-deployment.yml \
+  -f canary_duration=10 \
+  --ref main
+```
+
+### Trigger Without Auto-Promotion
+```bash
+gh workflow run canary-deployment.yml \
+  -f auto_promote=false \
+  --ref main
+
+# Later, manually promote to stable:
+kubectl set image deployment/node-app node-app=docker.io/user/repo:latest -n node-app
+kubectl rollout status deployment/node-app -n node-app
+```
+
+### Manual Rollback (if needed)
+```bash
+# Kubernetes
+kubectl delete deployment node-app-canary -n canary
+
+# VPS
+ssh deploy@your-vps-ip
+docker-compose -f docker-compose.prod.yml --profile canary down app-canary
+```
+
+---
+
+## Step 12: Test Branch Protection
+
+Verify branch protection is working:
+
+```bash
+# Try to commit directly to main (should fail)
+git checkout main
+git commit --allow-empty -m "test: direct commit"
+git push origin main
+# ❌ Error: "Reviews required" or "Status checks failed"
+
+# Correct way: Create PR
+git checkout -b feature/test
+git commit --allow-empty -m "test: via PR"
+git push origin feature/test
+
+# Create PR on GitHub, get approval, pass CI checks
+# Then merge button appears
+```
+
+---
+
+## Checklist
+
+- [ ] GitHub CLI authenticated: `gh auth status`
+- [ ] Secrets set: `gh secret list` shows all required secrets
+- [ ] Branch protection activated: `Settings → Branches` shows rules
+- [ ] CI/CD pipeline passing: `gh run list` shows ✓ on latest runs
+- [ ] Canary pods running: `kubectl get pods -n canary` (if K8s)
+- [ ] Canary VPS running: `docker ps` shows `app-canary` (if VPS)
+- [ ] Health checks passing: `curl http://localhost:8080/health` (K8s port-forward) or `curl http://vps:8081/health`
+- [ ] Slack notifications received (if enabled)
+- [ ] Branch protection tested: Direct push blocked, PR flow works
+
+---
+
+## Next: Promoting Canary to Stable
+
+After canary succeeds:
+
+### Kubernetes
+```bash
+# Update production deployment with new image
+kubectl set image deployment/node-app node-app=docker.io/user/repo:abc1234 -n node-app
+kubectl rollout status deployment/node-app -n node-app
+```
+
+### VPS
+```bash
+# SSH and promote
+ssh deploy@your-vps-ip
+docker tag docker.io/user/repo:abc1234 docker.io/user/repo:production
+docker-compose -f docker-compose.prod.yml down app-stable
+docker-compose -f docker-compose.prod.yml up -d app-stable
+```
+
+---
+
+**Questions? Refer to:**
+- Detailed docs: `CANARY-DEPLOYMENT-GUIDE.txt`
+- Quick reference: `QUICK-START.txt`
+- Troubleshooting: `CI-CD-SETUP.txt`

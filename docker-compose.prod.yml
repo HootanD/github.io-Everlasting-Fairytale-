@@ -9,9 +9,14 @@ services:
       NODE_ENV: production
       PORT: 8080
       DEPLOYMENT: stable
+      JAEGER_ENDPOINT: http://jaeger:6831
+      TEMPO_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "8080:8080"
     restart: unless-stopped
+    depends_on:
+      - jaeger
+      - tempo
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 30s
@@ -32,9 +37,14 @@ services:
       NODE_ENV: production
       PORT: 8081
       DEPLOYMENT: canary
+      JAEGER_ENDPOINT: http://jaeger:6831
+      TEMPO_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "8081:8081"
     restart: on-failure:5
+    depends_on:
+      - jaeger
+      - tempo
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081"]
       interval: 10s
@@ -48,6 +58,40 @@ services:
       - production
     profiles:
       - canary  # Only start with --profile canary
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-prod
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "14268:14268"
+    restart: unless-stopped
+    networks:
+      - production
+    profiles:
+      - observability
+
+  # Tempo for trace aggregation
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo-prod
+    ports:
+      - "4318:4318"
+      - "3200:3200"
+    volumes:
+      - ./tempo.yml:/etc/tempo.yml
+      - tempo-data:/var/tempo
+    command: -config.file=/etc/tempo.yml
+    restart: unless-stopped
+    networks:
+      - production
+    profiles:
+      - observability
 
   # Load balancer (optional, for traffic splitting)
   nginx-lb:
@@ -64,6 +108,9 @@ services:
       - production
     profiles:
       - lb  # Only start with --profile lb
+
+volumes:
+  tempo-data:
 
 networks:
   production:
