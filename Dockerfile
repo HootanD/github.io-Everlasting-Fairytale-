@@ -1,5 +1,5 @@
 # Build stage
-FROM ubuntu:25.10 AS build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm install --production
 COPY app.js .
 
 # Final stage
-FROM ubuntu:25.10
+FROM node:18-alpine
 
 WORKDIR /app
 
