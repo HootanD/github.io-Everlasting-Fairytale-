@@ -34,13 +34,16 @@ services:
     image: grafana/tempo:latest
     container_name: tempo
     ports:
-      - "4318:4318"
-      - "3200:3200"
-      - "9411:9411"
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+      - "3200:3200"   # Tempo API
     volumes:
-      - ./tempo.yml:/etc/tempo.yml
+      - ./tempo.yml:/etc/tempo/tempo.yml
       - tempo-data:/var/tempo
-    command: -config.file=/etc/tempo.yml
+    command: -config.file=/etc/tempo/tempo.yml
+    environment:
+      JAEGER_AGENT_HOST: tempo
+      JAEGER_AGENT_PORT: "6831"
     restart: unless-stopped
 
 volumes:
