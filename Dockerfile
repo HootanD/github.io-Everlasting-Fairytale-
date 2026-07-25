@@ -1,5 +1,5 @@
 # Build stage
-FROM node:26-slim AS build
+FROM ubuntu:25.10 AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm install --production
 COPY app.js .
 
 # Final stage
-FROM node:26-slim
+FROM ubuntu:25.10
 
 WORKDIR /app
 
