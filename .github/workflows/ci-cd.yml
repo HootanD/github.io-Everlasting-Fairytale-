@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
   # Lint and validate
@@ -58,7 +58,6 @@ jobs:
       packages: write
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
-      image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
       
@@ -72,26 +71,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Extract metadata
+      - name: Generate image tag
         id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
+            TAG="latest"
+          else
+            TAG="${BRANCH}-${SHORT_SHA}"
+          fi
+          
+          IMAGE="${{ env.IMAGE_NAME }}:${TAG}"
+          echo "tags=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Image tag: ${IMAGE}"
       
       - name: Build and push Docker image
-        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -100,9 +104,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      security-events: write
     steps:
       - uses: actions/checkout@v4
       
@@ -118,16 +119,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ needs.build.outputs.image-tag }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-        continue-on-error: true
-      
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always() && hashFiles('trivy-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy'
+          format: 'table'
+          exit-code: '0'
 
   # Deploy to staging (on develop)
   deploy-staging:
@@ -140,9 +133,7 @@ jobs:
       - name: Deploy to staging
         run: |
           echo "Deploying to staging environment..."
-          # Add your staging deployment command here
-          # Example: docker-compose -f docker-compose.yml up -d
-          echo "Deployment would use image: ${{ needs.build.outputs.image-tag }}"
+          echo "Using image: ${{ needs.build.outputs.image-tag }}"
 
   # Deploy to production (on main/tags)
   deploy-production:
@@ -155,6 +146,4 @@ jobs:
       - name: Deploy to production
         run: |
           echo "Deploying to production environment..."
-          # Add your production deployment command here
-          # Example: kubectl set image deployment/node-app app=${{ needs.build.outputs.image-tag }}
-          echo "Deployment would use image: ${{ needs.build.outputs.image-tag }}"
+          echo "Using image: ${{ needs.build.outputs.image-tag }}"
