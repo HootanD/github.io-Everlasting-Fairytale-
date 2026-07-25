@@ -1,0 +1,27 @@
+#! tempo-service.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: tempo-published
+    namespace: everlasting-fairytale
+    labels:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: tempo
+spec:
+    selector:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: tempo
+    ports:
+        - name: tempo-4318
+          port: 4318
+          protocol: TCP
+          targetPort: tempo-4318
+        - name: tempo-3200
+          port: 3200
+          protocol: TCP
+          targetPort: tempo-3200
+        - name: tempo-9411
+          port: 9411
+          protocol: TCP
+          targetPort: tempo-9411

@@ -1,0 +1,17 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-everlasting-fairytale-namespace.yaml
+    - app-deployment.yaml
+    - app-expose.yaml
+    - app-service.yaml
+    - default-network-policy.yaml
+    - jaeger-deployment.yaml
+    - jaeger-expose.yaml
+    - jaeger-service.yaml
+    - tempo-deployment.yaml
+    - tempo-expose.yaml
+    - tempo-service.yaml
+    - tempo-tempo-data-persistentVolumeClaim.yaml

@@ -1,0 +1,42 @@
+#! app-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: app
+    namespace: everlasting-fairytale
+    labels:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: app
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: everlasting-fairytale
+            com.docker.compose.service: app
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: everlasting-fairytale
+                com.docker.compose.service: app
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: node-app
+                  image: everlasting-fairytale-app
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: JAEGER_ENDPOINT
+                      value: "http://jaeger:6831"
+                    - name: NODE_ENV
+                      value: "production"
+                    - name: PORT
+                      value: "8080"
+                    - name: TEMPO_ENDPOINT
+                      value: "http://tempo:4318/v1/traces"
+                  ports:
+                    - name: app-8080
+                      containerPort: 8080

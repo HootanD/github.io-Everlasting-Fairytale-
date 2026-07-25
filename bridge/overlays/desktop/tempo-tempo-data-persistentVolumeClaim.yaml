@@ -1,0 +1,9 @@
+#! tempo-tempo-data-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: tempo-tempo-data
+    namespace: everlasting-fairytale
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

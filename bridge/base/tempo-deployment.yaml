@@ -1,0 +1,51 @@
+#! tempo-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: tempo
+    namespace: everlasting-fairytale
+    labels:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: tempo
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: everlasting-fairytale
+            com.docker.compose.service: tempo
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: everlasting-fairytale
+                com.docker.compose.service: tempo
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: tempo
+                  image: grafana/tempo:latest
+                  imagePullPolicy: IfNotPresent
+                  args:
+                    - -config.file=/etc/tempo.yml
+                  ports:
+                    - name: tempo-3200
+                      containerPort: 3200
+                    - name: tempo-9411
+                      containerPort: 9411
+                    - name: tempo-4318
+                      containerPort: 4318
+                  volumeMounts:
+                    - name: etc-tempo-yml
+                      mountPath: /etc/tempo.yml
+                    - name: var-tempo
+                      mountPath: /var/tempo
+            volumes:
+                - name: etc-tempo-yml
+                  hostPath:
+                    path: C:\Users\Administrator\OneDrive\Documents\GitHub\Everlasting-Fairytale\tempo.yml
+                - name: var-tempo
+                  persistentVolumeClaim:
+                    claimName: tempo-tempo-data

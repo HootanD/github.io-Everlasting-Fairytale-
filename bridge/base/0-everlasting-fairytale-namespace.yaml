@@ -1,0 +1,8 @@
+#! 0-everlasting-fairytale-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: everlasting-fairytale
+    labels:
+        com.docker.compose.project: everlasting-fairytale

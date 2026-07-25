@@ -1,4 +1,5 @@
-FROM node:26.5.0-alpine
+# Build stage
+FROM node:26-slim AS build
 
 WORKDIR /app
 
@@ -6,6 +7,15 @@ COPY package*.json ./
 RUN npm install --production
 
 COPY app.js .
+
+# Final stage
+FROM node:26-slim
+
+WORKDIR /app
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/app.js .
+COPY --from=build /app/package*.json ./
 
 EXPOSE 8080
 

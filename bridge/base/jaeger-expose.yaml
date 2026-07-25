@@ -1,0 +1,45 @@
+#! jaeger-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: jaeger
+    namespace: everlasting-fairytale
+    labels:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: jaeger
+spec:
+    selector:
+        com.docker.compose.project: everlasting-fairytale
+        com.docker.compose.service: jaeger
+    ports:
+        - name: jaeger-16686
+          port: 16686
+          targetPort: jaeger-16686
+        - name: jaeger-5775
+          port: 5775
+          targetPort: jaeger-5775
+        - name: jaeger-14250
+          port: 14250
+          targetPort: jaeger-14250
+        - name: jaeger-14268
+          port: 14268
+          targetPort: jaeger-14268
+        - name: jaeger-4317
+          port: 4317
+          targetPort: jaeger-4317
+        - name: jaeger-4318
+          port: 4318
+          targetPort: jaeger-4318
+        - name: jaeger-9411
+          port: 9411
+          targetPort: jaeger-9411
+        - name: jaeger-6831
+          port: 6831
+          targetPort: jaeger-6831
+        - name: jaeger-6832
+          port: 6832
+          targetPort: jaeger-6832
+        - name: jaeger-5778
+          port: 5778
+          targetPort: jaeger-5778
