@@ -71,12 +71,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Generate image tag
+      - name: Generate image tag (lowercase)
         id: meta
         run: |
           BRANCH="${{ github.ref_name }}"
           SHA="${{ github.sha }}"
           SHORT_SHA="${SHA:0:7}"
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG="${GITHUB_REF#refs/tags/}"
@@ -86,7 +87,7 @@ jobs:
             TAG="${BRANCH}-${SHORT_SHA}"
           fi
           
-          IMAGE="${{ env.IMAGE_NAME }}:${TAG}"
+          IMAGE="ghcr.io/${REPO_LOWER}:${TAG}"
           echo "tags=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Image tag: ${IMAGE}"
       
