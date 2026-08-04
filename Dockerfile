@@ -1,18 +1,18 @@
 # Build stage
-FROM node:22.23-alpine3.23 AS build
+FROM ubuntu:26.04 AS build
 
 WORKDIR /app
-
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 RUN npm install --production
 
 COPY app.js .
 
 # Final stage
-FROM node:22.23-alpine3.23
+FROM ubuntu:26.04
 
 WORKDIR /app
-
+RUN addgroup -g 1001 nodejs && adduser -u 1001 -G nodejs -s /bin/sh -D nodejs
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/app.js .
 COPY --from=build /app/package*.json ./
