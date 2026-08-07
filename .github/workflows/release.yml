@@ -1,0 +1,149 @@
+name: Release & Versioning
+
+on:
+  push:
+    branches: [main]
+    tags-ignore:
+      - '**'
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}\n      should-release: ${{ steps.semver.outputs.should-release }}\n    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get current package version
+        id: package
+        run: |
+          VERSION=$(grep '\"version\"' package.json | head -1 | sed -E 's/.*\"([^\"]+)\".*/\\1/')
+          echo \"version=${VERSION}\" >> \"$GITHUB_OUTPUT\"
+      
+      - name: Check if version tag exists
+        id: tag-exists
+        run: |
+          VERSION=\"v${{ steps.package.outputs.version }}\"
+          if git rev-parse \"${VERSION}\" >/dev/null 2>&1; then
+            echo \"exists=true\" >> \"$GITHUB_OUTPUT\"
+          else
+            echo \"exists=false\" >> \"$GITHUB_OUTPUT\"
+          fi
+      
+      - name: Determine if release is needed
+        id: semver
+        run: |
+          VERSION=\"${{ steps.package.outputs.version }}\"
+          TAG_EXISTS=\"${{ steps.tag-exists.outputs.exists }}\"
+          
+          if [ \"${TAG_EXISTS}\" = \"false\" ]; then
+            echo \"should-release=true\" >> \"$GITHUB_OUTPUT\"
+            echo \"version=v${VERSION}\" >> \"$GITHUB_OUTPUT\"
+            echo \"📦 Will create release: v${VERSION}\"
+          else
+            echo \"should-release=false\" >> \"$GITHUB_OUTPUT\"
+            echo \"ℹ️  Version v${VERSION} already released\"
+          fi
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: determine-version
+    if: needs.determine-version.outputs.should-release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create Git tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ needs.determine-version.outputs.version }}
+          git push origin ${{ needs.determine-version.outputs.version }}
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          {
+            echo 'changelog<<EOF'
+            git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD')..HEAD | head -20 || echo \"Initial release\"
+            echo EOF
+          } >> \"$GITHUB_OUTPUT\"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.determine-version.outputs.version }}
+          body: |
+            # Release ${{ needs.determine-version.outputs.version }}
+            
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ## Docker Image
+            ```
+            docker pull ghcr.io/${{ github.repository }}:${{ needs.determine-version.outputs.version }}
+            docker pull ghcr.io/${{ github.repository }}:latest
+            ```
+            
+            ## Container Registry
+            - **Registry**: GitHub Container Registry (ghcr.io)
+            - **Image**: `ghcr.io/${{ github.repository }}`
+            - **Tags**: `${{ needs.determine-version.outputs.version }}`, `latest`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-artifacts:
+    runs-on: ubuntu-latest
+    needs: [determine-version, create-release]
+    if: needs.determine-version.outputs.should-release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create build artifacts
+        run: |
+          mkdir -p artifacts
+          
+          # Copy Dockerfile
+          cp Dockerfile artifacts/
+          
+          # Create docker-compose file for distribution
+          cp docker-compose.yml artifacts/docker-compose.yml
+          
+          # Create quick-start guide
+          cat > artifacts/QUICK-START.md << 'GUIDE'
+          # ${{ github.repository }} - Quick Start
+          
+          ## Pull the Image
+          \`\`\`bash
+          docker pull ghcr.io/${{ github.repository }}:${{ needs.determine-version.outputs.version }}
+          \`\`\`
+          
+          ## Run Standalone
+          \`\`\`bash
+          docker run -p 8080:8080 \\
+            -e NODE_ENV=production \\
+            ghcr.io/${{ github.repository }}:${{ needs.determine-version.outputs.version }}
+          \`\`\`
+          
+          ## Run with Compose
+          \`\`\`bash
+          docker compose up -d
+          \`\`\`
+          
+          ## Verify
+          - Health: http://localhost:8080/health
+          - Metrics: http://localhost:8080/metrics
+          - Root: http://localhost:8080/
+          GUIDE
+      
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.determine-version.outputs.version }}
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

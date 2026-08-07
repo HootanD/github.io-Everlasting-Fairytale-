@@ -1,0 +1,161 @@
+name: Performance & Regression Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3 AM UTC
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    services:
+      app:
+        image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        ports:
+          - 8080:8080
+        options: |
+          --health-cmd=\"curl -f http://localhost:8080/health || exit 1\"
+          --health-interval=30s
+          --health-timeout=5s
+          --health-retries=3
+        env:
+          NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Wait for service
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:8080/health && exit 0
+            sleep 1
+          done
+          exit 1
+      
+      - name: Run load tests
+        run: |
+          npm install -g autocannon
+          autocannon -d 30 -c 100 -w 10 http://localhost:8080/ > load-test-results.json
+      
+      - name: Verify response time < 200ms (p95)
+        run: |
+          node -e \"
+            const results = require('./load-test-results.json');
+            const p95 = results.latency.p95;
+            console.log('P95 latency:', p95, 'ms');
+            if (p95 > 200) {
+              console.error('FAIL: P95 latency exceeds 200ms threshold');
+              process.exit(1);
+            }
+          \"
+      
+      - name: Verify error rate < 1%
+        run: |
+          node -e \"
+            const results = require('./load-test-results.json');
+            const errorRate = (results.errors / results.requests.total) * 100;
+            console.log('Error rate:', errorRate.toFixed(2), '%');
+            if (errorRate >= 1) {
+              console.error('FAIL: Error rate exceeds 1% threshold');
+              process.exit(1);
+            }
+          \"
+      
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test-results.json
+          retention-days: 30
+
+  regression-test:
+    runs-on: ubuntu-latest
+    services:
+      app:
+        image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        ports:
+          - 8080:8080
+        options: |
+          --health-cmd=\"curl -f http://localhost:8080/health || exit 1\"
+          --health-interval=30s
+          --health-timeout=5s
+          --health-retries=3
+        env:
+          NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Wait for service
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:8080/health && exit 0
+            sleep 1
+          done
+          exit 1
+      
+      - name: Test health endpoint
+        run: |
+          curl -f http://localhost:8080/health || exit 1
+          echo \"✓ Health endpoint working\"
+      
+      - name: Test ready endpoint
+        run: |
+          curl -f http://localhost:8080/ready || exit 1
+          echo \"✓ Ready endpoint working\"
+      
+      - name: Test metrics endpoint
+        run: |
+          curl -f http://localhost:8080/metrics | grep -q 'http_requests_total' || exit 1
+          echo \"✓ Metrics endpoint working\"
+      
+      - name: Test trace endpoint
+        run: |
+          curl -f http://localhost:8080/trace-test | grep -q 'trace_id' || exit 1
+          echo \"✓ Trace endpoint working\"
+      
+      - name: Test root endpoint returns 200
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)
+          if [ \"$HTTP_CODE\" != \"200\" ]; then
+            echo \"FAIL: Root endpoint returned $HTTP_CODE\"
+            exit 1
+          fi
+          echo \"✓ Root endpoint working\"
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Start services
+        run: docker compose up -d
+      
+      - name: Wait for app to be ready
+        run: |
+          for i in {1..60}; do
+            curl -s http://localhost:8080/ready && exit 0
+            sleep 1
+          done
+          echo \"Service failed to start\"
+          docker compose logs
+          exit 1
+      
+      - name: Verify compose services
+        run: |
+          docker compose ps
+          RUNNING=$(docker compose ps --services --filter \"status=running\" | wc -l)
+          if [ \"$RUNNING\" -lt 3 ]; then
+            echo \"FAIL: Not all services running\"
+            exit 1
+          fi
+      
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v

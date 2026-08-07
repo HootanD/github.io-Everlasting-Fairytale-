@@ -1,0 +1,87 @@
+#!/bin/bash
+# CI/CD Quick Reference - Common Operations
+
+echo "=== Everlasting Fairytale CI/CD Commands ==="
+echo ""
+echo "📋 QUICK REFERENCE"
+echo "---"
+echo ""
+
+echo "1️⃣  TRIGGER BUILD MANUALLY"
+echo "   git push origin main"
+echo "   (Automatically triggers: lint → test → build → security → deploy)"
+echo ""
+
+echo "2️⃣  CREATE NEW RELEASE"
+echo "   npm version major|minor|patch"
+echo "   git push origin main --tags"
+echo "   (Auto-creates GitHub release with Dockerfile + quick-start)"
+echo ""
+
+echo "3️⃣  MANUAL PRODUCTION DEPLOYMENT"
+echo "   1. Go to GitHub: Actions → Production Deployment with Approval"
+echo "   2. Click 'Run workflow'"
+echo "   3. Select strategy: rolling | blue-green | canary"
+echo "   4. Approve in environment gate (if enabled)"
+echo ""
+
+echo "4️⃣  VIEW SECURITY SCAN RESULTS"
+echo "   1. Go to GitHub: Security → Code scanning"
+echo "   2. Filter by: trivy-vulnerabilities | trivy-config"
+echo ""
+
+echo "5️⃣  VIEW BUILD STATUS"
+echo "   1. Go to GitHub: Actions → [workflow name]"
+echo "   2. Click latest run to see detailed logs"
+echo ""
+
+echo "6️⃣  PULL BUILT IMAGE"
+echo "   docker login ghcr.io -u <username> -p \$(gh auth token)"
+echo "   docker pull ghcr.io/<owner>/<repo>:latest"
+echo ""
+
+echo "7️⃣  TEST DEPLOYMENT LOCALLY"
+echo "   docker compose up -d"
+echo "   curl http://localhost:8080/health"
+echo "   docker compose logs app"
+echo "   docker compose down -v"
+echo ""
+
+echo "8️⃣  ADD DEPLOYMENT SECRETS"
+echo "   1. Go to GitHub: Settings → Secrets and variables → Actions"
+echo "   2. Click 'New repository secret'"
+echo "   3. Add: DEPLOY_HOST, DEPLOY_KEY, etc."
+echo ""
+
+echo "9️⃣  CONFIGURE APPROVAL GATES"
+echo "   1. Go to GitHub: Settings → Environments"
+echo "   2. Click 'production' or 'staging'"
+echo "   3. Enable 'Required reviewers' if desired"
+echo ""
+
+echo "🔟 SKIP CI/CD FOR A COMMIT"
+echo "   git commit -m 'message [skip ci]'"
+echo "   (Prevents workflows from running)"
+echo ""
+
+echo ""
+echo "📊 WORKFLOW STATUS"
+echo "---"
+echo "✓ CI/CD Pipeline             (lint → test → build → security → deploy)"
+echo "✓ Docker Image Security Scan (daily + on build)"
+echo "✓ Production Deployment      (manual with approval)"
+echo "✓ Performance Tests          (load test + regression)"
+echo "✓ Release & Versioning       (auto on version bump)"
+echo ""
+
+echo "🔗 USEFUL LINKS"
+echo "---"
+echo "• Workflows: https://github.com/$GITHUB_REPOSITORY/actions"
+echo "• Security Scans: https://github.com/$GITHUB_REPOSITORY/security/code-scanning"
+echo "• Container Registry: https://github.com/$GITHUB_REPOSITORY/pkgs/container/"
+echo "• Releases: https://github.com/$GITHUB_REPOSITORY/releases"
+echo ""
+
+echo "❓ NEED HELP?"
+echo "   See: CI-CD-SETUP-GUIDE.md"
+echo ""
