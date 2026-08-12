@@ -7,12 +7,72 @@ services:
     environment:
       NODE_ENV: production
       PORT: 8080
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      OTEL_SERVICE_NAME: everlasting-fairytale
       JAEGER_ENDPOINT: http://jaeger:6831
       TEMPO_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       - jaeger
       - tempo
+      - prometheus
     restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Prometheus for metrics scraping
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    depends_on:
+      - alertmanager
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Alertmanager for alert handling and routing
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/config.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - tempo
+    restart: unless-stopped
+    networks:
+      - monitoring
 
   # Jaeger for distributed tracing
   jaeger:
@@ -28,6 +88,8 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HTTP_PORT: 9411
     restart: unless-stopped
+    networks:
+      - monitoring
 
   # Tempo for trace aggregation
   tempo:
@@ -45,6 +107,15 @@ services:
       JAEGER_AGENT_HOST: tempo
       JAEGER_AGENT_PORT: "6831"
     restart: unless-stopped
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
 
 volumes:
   tempo-data:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:

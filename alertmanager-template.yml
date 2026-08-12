@@ -71,6 +71,7 @@ receivers:
             text: 'View Alertmanager'
             url: 'http://localhost:9093'
         footer: 'Everlasting Fairytale | Prometheus Alertmanager'
+        ts: '{{ (index .Alerts 0).StartsAt.Unix }}'
         
       # Optional: Also send to #ops-on-call
       # - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_ONCALL'
@@ -94,7 +95,6 @@ receivers:
           {{ end }}
         send_resolved: true
         color: 'warning'
-        footer: 'Everlasting Fairytale Alerting'
 
   # ==================== PAGERDUTY CONFIGURATION ====================
   

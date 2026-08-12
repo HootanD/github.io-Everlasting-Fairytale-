@@ -1,0 +1,86 @@
+{
+  "dashboard": {
+    "title": "Distributed Tracing - Tempo & Jaeger",
+    "tags": ["tracing", "tempo", "jaeger", "monitoring"],
+    "timezone": "browser",
+    "uid": "tracing-dashboard",
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "title": "Trace Overview",
+        "type": "text",
+        "gridPos": {
+          "h": 2,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "content": "# Distributed Tracing Monitor\n\n**Service:** Everlasting Fairytale\n- **Tempo API:** http://localhost:3200\n- **Jaeger UI:** http://localhost:16686\n- **Traces Endpoint:** http://localhost:4318/v1/traces"
+      },
+      {
+        "title": "Traces by Service",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 2
+        },
+        "targets": [
+          {
+            "expr": "rate(trace_generation_total[5m])",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "title": "Span Processing Rate",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 2
+        },
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_seconds_count[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ]
+      },
+      {
+        "title": "Tempo Storage Usage",
+        "type": "gauge",
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 10
+        },
+        "targets": [
+          {
+            "expr": "node_filesystem_avail_bytes"
+          }
+        ]
+      },
+      {
+        "title": "Trace Sampling Status",
+        "type": "stat",
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 10
+        },
+        "content": "Tracing Configuration:\n- **Protocol:** OTLP HTTP\n- **Endpoint:** http://tempo:4318\n- **Service Name:** everlasting-fairytale\n- **Jaeger Collector:** http://jaeger:14268"
+      }
+    ]
+  },
+  "overwrite": true
+}

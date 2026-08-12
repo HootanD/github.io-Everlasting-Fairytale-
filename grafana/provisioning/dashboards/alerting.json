@@ -1,0 +1,110 @@
+{
+  "dashboard": {
+    "title": "Alerting - Rules & Status",
+    "tags": ["alerting", "rules", "monitoring"],
+    "timezone": "browser",
+    "uid": "alerting-dashboard",
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "title": "Active Alerts",
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "count(ALERTS{severity=\"critical\"})"
+          }
+        ]
+      },
+      {
+        "title": "Warning Alerts",
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "count(ALERTS{severity=\"warning\"})"
+          }
+        ]
+      },
+      {
+        "title": "Alert Firing Status",
+        "type": "table",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        },
+        "targets": [
+          {
+            "expr": "ALERTS{severity=~\"critical|warning\"}",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      },
+      {
+        "title": "Service Health Overview",
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        },
+        "targets": [
+          {
+            "expr": "count(up{job=\"node-app\"} == 1) / count(up{job=\"node-app\"})"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate Trend",
+        "type": "graph",
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "(rate(http_errors_total[5m]) / rate(http_requests_total[5m])) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ]
+      },
+      {
+        "title": "SLA Compliance Trend",
+        "type": "graph",
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 22
+        },
+        "targets": [
+          {
+            "expr": "sla_compliance_percentage"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

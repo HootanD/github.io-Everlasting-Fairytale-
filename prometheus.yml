@@ -1,51 +1,39 @@
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
+  evaluation_interval: 30s
   external_labels:
-    environment: production
-    service: app
+    environment: 'production'
+    service: 'everlasting-fairytale'
 
 alerting:
   alertmanagers:
     - static_configs:
-        - targets:
-            - alertmanager:9093
+        - targets: ['alertmanager:9093']
 
 rule_files:
-  - '/etc/prometheus/rules.yml'
+  - '/etc/prometheus/prometheus-alerts.yml'
 
 scrape_configs:
-  # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # Node Exporter (host metrics)
-  - job_name: 'node'
-    static_configs:
-      - targets: ['node-exporter:9100']
-
-  # cAdvisor (container metrics)
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']
-
-  # App stable instance
-  - job_name: 'app-stable'
+  - job_name: 'node-app'
     metrics_path: '/metrics'
-    scrape_interval: 10s
     static_configs:
-      - targets: ['app-stable:8080']
+      - targets: ['node-app:8080']
         labels:
-          instance: stable
-          deployment: production
+          service: 'everlasting-fairytale'
+          env: 'production'
 
-  # App canary instance
-  - job_name: 'app-canary'
-    metrics_path: '/metrics'
-    scrape_interval: 10s
+  - job_name: 'jaeger'
     static_configs:
-      - targets: ['app-canary:8081']
-        labels:
-          instance: canary
-          deployment: canary
+      - targets: ['jaeger:14269']
+
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']
+      
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
