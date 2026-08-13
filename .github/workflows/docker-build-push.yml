@@ -20,6 +20,7 @@ jobs:
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
       image-tags: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.image-tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +45,14 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract primary image tag
+        id: image-tag
+        run: |
+          TAGS="${{ steps.meta.outputs.tags }}"
+          PRIMARY_TAG=$(echo "$TAGS" | head -1)
+          echo "tag=$PRIMARY_TAG" >> $GITHUB_OUTPUT
+          echo "Primary tag: $PRIMARY_TAG"
 
       - name: Build and push
         id: build
@@ -71,7 +80,7 @@ jobs:
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ needs.build.outputs.image-tags }}
+          image-ref: ${{ needs.build.outputs.image-tag }}
           format: sarif
           output: trivy-results.sarif
 

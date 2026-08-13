@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: hootand/everlasting-fairytale
   NODE_ENV: production
 
 jobs:
@@ -91,7 +91,6 @@ jobs:
           BRANCH="${{ github.ref_name }}"
           SHA="${{ github.sha }}"
           SHORT_SHA="${SHA:0:7}"
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]' | sed 's/-$//')
           
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG="${GITHUB_REF#refs/tags/}"
@@ -101,7 +100,7 @@ jobs:
             TAG="${BRANCH}-${SHORT_SHA}"
           fi
           
-          IMAGE="ghcr.io/${REPO_LOWER}:${TAG}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
           echo "tags=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Image tag: ${IMAGE}"
       
