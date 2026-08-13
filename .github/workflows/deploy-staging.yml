@@ -24,12 +24,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull latest develop image
-        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop
-
-      - name: Deploy with docker compose
+      - name: Build Docker image
         run: |
-          docker compose -f docker-compose.yml up -d --pull always
+          docker build -t app:staging .
+
+      - name: Start app container
+        run: |
+          docker run -d \
+            --name staging-app \
+            -p 8080:8080 \
+            -e NODE_ENV=production \
+            app:staging
 
       - name: Wait for service health
         run: |
@@ -43,7 +48,7 @@ jobs:
             sleep 2
           done
           echo "✗ Service failed health check"
-          docker compose logs
+          docker logs staging-app
           exit 1
 
       - name: Run smoke tests
@@ -51,21 +56,50 @@ jobs:
           curl -f http://localhost:8080/health
           curl -f http://localhost:8080/ready
           curl -f http://localhost:8080/metrics > /dev/null
+          echo "✓ All smoke tests passed"
 
-      - name: Notify Slack
+      - name: Cleanup
         if: always()
+        run: |
+          docker stop staging-app || true
+          docker rm staging-app || true
+
+      - name: Notify Slack on success
+        if: success()
         uses: slackapi/slack-github-action@v1.26.0
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
-              "text": "Staging deployment ${{ job.status }}",
+              "text": "✅ Staging deployment succeeded",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Staging Deployment*\nStatus: ${{ job.status }}\nBranch: develop\nCommit: ${{ github.sha }}"
+                    "text": "*✅ Staging Deployment Success*\nBranch: develop\nCommit: ${{ github.sha }}\nImage: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ Staging deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*❌ Staging Deployment Failed*\nBranch: develop\nCommit: ${{ github.sha }}"
                   }
                 }
               ]
