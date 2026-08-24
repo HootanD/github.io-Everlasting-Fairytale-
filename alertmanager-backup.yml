@@ -1,0 +1,187 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: 'YOUR_SLACK_WEBHOOK_URL_HERE'
+
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  routes:
+    # Critical alerts - route to PagerDuty + Slack critical channel
+    - match:
+        severity: critical
+      receiver: 'critical-pagerduty'
+      continue: true
+      routes:
+        - receiver: 'slack-critical'
+      group_wait: 5s
+      repeat_interval: 4h
+      
+    # Warning alerts - route to Slack
+    - match:
+        severity: warning
+      receiver: 'slack-warning'
+      group_wait: 30s
+      repeat_interval: 8h
+      
+    # Info alerts - route to default
+    - match:
+        severity: info
+      receiver: 'info-webhook'
+      group_wait: 60s
+      repeat_interval: 24h
+      
+    # Component-level alerts
+    - match:
+        component: prometheus
+      receiver: 'slack-critical'
+      group_wait: 10s
+      
+    - match:
+        component: jaeger
+      receiver: 'slack-warning'
+      group_wait: 15s
+
+receivers:
+  # Default receiver (null - no notifications)
+  - name: 'default'
+    
+  # ==================== SLACK RECEIVERS ====================
+  
+  # Critical alerts to Slack #critical-alerts channel
+  - name: 'slack-critical'
+    slack_configs:
+      # Replace with your Slack Webhook URL
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL'
+        channel: '#critical-alerts'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          *Service:* {{ .GroupLabels.service }}
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          
+          {{ range .Alerts }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Status:* {{ .Status }}
+          {{ end }}
+        send_resolved: true
+        color: 'danger'
+        actions:
+          - type: button
+            text: 'View in Prometheus'
+            url: 'http://prometheus:9090/graph'
+          - type: button
+            text: 'View Alerts'
+            url: 'http://alertmanager:9093'
+        footer: 'Everlasting Fairytale Alerting'
+        footer_logo: 'https://www.pngkey.com/png/detail/266-2665688_prometheus-logo-png.png'
+        ts: '{{ (index .Alerts 0).StartsAt.Unix }}'
+
+  # Warning alerts to Slack #warnings channel
+  - name: 'slack-warning'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL'
+        channel: '#warnings'
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: |
+          *Service:* {{ .GroupLabels.service }}
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Environment:* {{ .CommonLabels.environment }}
+          
+          {{ range .Alerts }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+        color: 'warning'
+        footer: 'Everlasting Fairytale Alerting'
+        ts: '{{ (index .Alerts 0).StartsAt.Unix }}'
+
+  # Info alerts to Slack #monitoring channel
+  - name: 'slack-info'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL'
+        channel: '#monitoring'
+        title: 'ℹ️ INFO: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+        color: 'good'
+
+  # ==================== PAGERDUTY RECEIVERS ====================
+  
+  # Critical alerts to PagerDuty
+  - name: 'critical-pagerduty'
+    pagerduty_configs:
+      # Replace with your PagerDuty Integration Key
+      - service_key: 'YOUR_PAGERDUTY_INTEGRATION_KEY'
+        description: '{{ .GroupLabels.alertname }} - {{ .CommonLabels.severity }}'
+        details:
+          firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
+          service: '{{ .GroupLabels.service }}'
+          environment: '{{ .CommonLabels.environment }}'
+        client: 'Prometheus Alertmanager'
+        client_url: 'http://alertmanager:9093'
+        links:
+          - href: 'http://prometheus:9090/graph'
+            text: 'Prometheus Graph'
+        severity: '{{ if eq .Status "firing" }}critical{{ else }}info{{ end }}'
+
+  # Alternative: PagerDuty via webhook for advanced features
+  - name: 'critical-pagerduty-webhook'
+    webhook_configs:
+      # PagerDuty Events API v2 endpoint
+      - url: 'https://events.pagerduty.com/v2/enqueue'
+        send_resolved: true
+        headers:
+          Content-Type: 'application/json'
+        # Note: PagerDuty webhook requires custom payload formatting
+        # See SLACK_PAGERDUTY_SETUP.md for full webhook payload example
+
+  # ==================== WEBHOOK RECEIVERS ====================
+  
+  # Generic webhook for custom integrations
+  - name: 'info-webhook'
+    webhook_configs:
+      - url: 'http://localhost:5001/'  # Custom webhook receiver
+        send_resolved: true
+        headers:
+          Content-Type: 'application/json'
+        
+  # Email notifications (requires SMTP configuration)
+  # - name: 'email'
+  #   email_configs:
+  #     - to: 'alerts@example.com'
+  #       from: 'alertmanager@example.com'
+  #       smarthost: 'smtp.example.com:587'
+  #       auth_username: 'username'
+  #       auth_password: 'password'
+  #       headers:
+  #         Subject: '{{ .GroupLabels.alertname }}'
+
+inhibit_rules:
+  # Inhibit warning if critical is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+    
+  # Inhibit info if warning is firing
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'service']
+    
+  # Don't alert on resolved ServiceDown if new ServiceDown firing
+  - source_match:
+      alertname: 'ServiceDown'
+      severity: 'critical'
+    target_match_re:
+      severity: 'warning|info'
+    equal: ['service']

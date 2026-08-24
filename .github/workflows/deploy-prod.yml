@@ -1,0 +1,162 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_strategy:
+        description: 'Deployment strategy'
+        required: true
+        type: choice
+        default: rolling
+        options:
+          - rolling
+          - blue-green
+          - canary
+      image_tag:
+        description: 'Image tag to deploy (default: latest)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: hootand/everlasting-fairytale
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.resolve.outputs.image-tag }}
+    steps:
+      - name: Resolve image tag
+        id: resolve
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="latest"
+          fi
+          echo "image-tag=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" >> $GITHUB_OUTPUT
+          echo "Deploying image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+
+      - name: Verify image exists
+        run: |
+          docker pull ${{ steps.resolve.outputs.image-tag }} --dry-run || {
+            echo "Image not found: ${{ steps.resolve.outputs.image-tag }}"
+            exit 1
+          }
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: production
+      url: https://example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy using ${{ github.event.inputs.deployment_strategy }} strategy
+        id: deploy
+        run: |
+          STRATEGY="${{ github.event.inputs.deployment_strategy }}"
+          IMAGE_TAG="${{ needs.validate.outputs.image-tag }}"
+          
+          echo "Deployment Strategy: $STRATEGY"
+          echo "Image: $IMAGE_TAG"
+          echo "Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          
+          case $STRATEGY in
+            rolling)
+              echo "Deploying with rolling update strategy..."
+              docker compose -f docker-compose.prod.yml up -d --pull always
+              ;;
+            blue-green)
+              echo "Deploying with blue-green strategy..."
+              # Start green deployment
+              docker compose -f docker-compose.prod.yml up -d --pull always
+              ;;
+            canary)
+              echo "Deploying with canary strategy..."
+              # Start canary deployment at reduced scale
+              docker compose -f docker-compose.prod.yml --profile canary up -d --pull always
+              ;;
+            *)
+              echo "Unknown strategy: $STRATEGY"
+              exit 1
+              ;;
+          esac
+          
+          echo "deploy-strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          echo "image-deployed=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Health check
+        run: |
+          echo "Running health checks..."
+          for i in {1..20}; do
+            if curl -f http://localhost:8080/health > /dev/null 2>&1; then
+              echo "✓ Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i/20..."
+            sleep 5
+          done
+          echo "✗ Health check failed"
+          exit 1
+
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          curl -f http://localhost:8080/
+          curl -f http://localhost:8080/health
+          curl -f http://localhost:8080/ready
+          curl -f http://localhost:8080/metrics > /dev/null
+          echo "✓ All smoke tests passed"
+
+      - name: Notify Slack success
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✓ Production deployment succeeded",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Production Deployment Success*\nStrategy: ${{ steps.deploy.outputs.deploy-strategy }}\nImage: ${{ needs.validate.outputs.image-tag }}\nDeployed: ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✗ Production deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*❌ Production Deployment Failed*\nStrategy: ${{ github.event.inputs.deployment_strategy }}\nImage: ${{ needs.validate.outputs.image-tag }}\nAttempted by: ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
