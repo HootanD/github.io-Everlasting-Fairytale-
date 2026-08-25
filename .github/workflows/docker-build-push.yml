@@ -9,7 +9,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: hootand/everlasting-fairytale
 
 jobs:
   build:
@@ -27,6 +26,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Normalize image name
+        id: image
+        run: |
+          REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          OWNER="${REPOSITORY%%/*}"
+          NAME="${REPOSITORY#*/}"
+          NAME=$(echo "$NAME" | sed 's/^[._-]\+//; s/[._-]\+$//')
+
+          if [ -z "$OWNER" ] || [ -z "$NAME" ]; then
+            echo "Invalid repository name for Docker image: $REPOSITORY" >&2
+            exit 1
+          fi
+
+          echo "name=${{ env.REGISTRY }}/${OWNER}/${NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -38,7 +52,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
