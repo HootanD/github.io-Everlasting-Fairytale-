@@ -64,6 +64,7 @@ jobs:
         id: meta
         run: |
           BRANCH="${{ github.ref_name }}"
+          BRANCH="${BRANCH//\//-}"
           SHA="${{ github.sha }}"
           SHORT_SHA="${SHA:0:7}"
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
