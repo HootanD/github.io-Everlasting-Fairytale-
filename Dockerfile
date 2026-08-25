@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 COPY package*.json ./
@@ -8,7 +8,7 @@ RUN npm install --production --omit=dev --legacy-peer-deps
 COPY app.js .
 
 # Final stage
-FROM node:24-alpine
+FROM node:26-alpine
 
 WORKDIR /app
 RUN addgroup -g 1001 nodejs && adduser -u 1001 -G nodejs -s /bin/sh -D nodejs
